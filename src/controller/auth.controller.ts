@@ -18,6 +18,14 @@ export class Auth implements IAuth {
         this.cryptService = cryptService
     }
 
+    /**
+     * @param {e.Request}req request object
+     * @param {e.Response}res response object
+     * @METHOD POST /v1/auth/signup
+     * @desc Signs up a user.
+     * - It assumes the email and password in the req.body are validated,
+     * so no extra validation is done.
+     */
     signup = asyncHandler(async (req, res) => {
         const { firstName, lastName, email, password, rePassword } = req.body
         const duplicate = await this.persistence.getUser(email)
@@ -43,6 +51,14 @@ export class Auth implements IAuth {
         }
     })
 
+    /**
+     * @param {e.Request}req express request object
+     * @param {e.Response}res express response object
+     * @METHOD POST /v1/auth/login
+     * @desc authorizes a user and responds with the user document object.
+     * - It assumes the email and password in the req.body are validated,
+     * so no extra validation is done.
+     */
     login = asyncHandler(async (req, res) => {
         const { email, password } = req.body
         const user = await this.persistence.getUser(email)
