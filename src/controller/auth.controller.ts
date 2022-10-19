@@ -1,5 +1,6 @@
 import e from "express"
 import asyncHandler from "express-async-handler"
+import { validationResult } from 'express-validator'
 import { IMongoService } from "../services/db.service"
 import { IEncryption } from "../services/encryption.service"
 
@@ -31,8 +32,11 @@ export class Auth implements IAuth {
         const duplicate = await this.persistence.getUser(email)
 
         // confirm data
-        if (!email || !firstName || !lastName || !password || password === rePassword) {
-            res.status(400).json({ message: 'All fields are required' })
+        const errors = validationResult(req)
+        // if (!email || !firstName || !lastName || !password || password !== rePassword) {
+        // res.status(400).json({ message: 'All fields are required' })
+        if (!errors.isEmpty()) {
+            res.status(400).json(errors)
             return
         }
 
@@ -44,7 +48,7 @@ export class Auth implements IAuth {
         const hashPass = await this.cryptService.encrypt(password)
         const newUser = await this.persistence.createUser({ firstName, lastName, email, password: hashPass })
 
-        if (!newUser) { // created successfully
+        if (newUser) { // created successfully
             res.status(201).json({ message: `Account created succesfully` })
         } else {
             res.status(400).json({ message: 'Invalid user data received' })
@@ -61,6 +65,14 @@ export class Auth implements IAuth {
      */
     login = asyncHandler(async (req, res) => {
         const { email, password } = req.body
+
+        // confirm data
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+            res.status(400).json(errors)
+            return
+        }
+
         const user = await this.persistence.getUser(email)
 
         if (!user) {
