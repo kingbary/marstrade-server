@@ -72,21 +72,15 @@ export class Auth implements IAuth {
             res.status(400).json(errors)
             return
         }
+        
+        const [user, hash] = await this.persistence.authenticate(email)
 
-        const user = await this.persistence.getUser(email)
-
-        if (!user) {
-            res.status(400).json({ message: 'User not found' })
+        const isCorrectPassword = await this.cryptService.compare(password, hash)
+        if (!isCorrectPassword) {
+            res.status(401).json({ message: 'Invalid details' })
             return
         }
 
-        // ensure correct password
-        const match = await this.cryptService.compare(password, user.password)
-
-        if (!match) {
-            res.status(401).json({ message: 'Invalid details' })
-        } else {
-            res.json(user)
-        }
+        res.json(user)
     })
 }
