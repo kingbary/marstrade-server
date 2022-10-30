@@ -6,8 +6,9 @@ import { IInvestmentController, InvestmentController } from "../controller/inves
 const investmentController: IInvestmentController = new InvestmentController(new MongoService())
 
 investmentRoute.post('/deposit', investmentController.makeInvestment)
-// investmentRoute.post('/deposit', investmentController.withdraw)
-// investmentRoute.post('/deposit', investmentController.verifyDeposit)
-// investmentRoute.post('/deposit', investmentController.confirmWithdrawal)
+// investmentRoute.post('/request-withdrawal', investmentController.withdraw)
+// investmentRoute.post('/verify-deposit', investmentController.verifyDeposit)
+// investmentRoute.post('/confirm-withdrawal', investmentController.confirmWithdrawal)
+// investmentRoute.post('/transaction-history', investmentController.getTransxHistory)
 
 export default investmentRoute
