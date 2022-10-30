@@ -4,6 +4,7 @@ import express from "express"
 
 import rootRoute from "./routes/root.route"
 import authRoute from "./routes/auth.route"
+import dashboardRoute from "./routes/dashboard.route"
 import { errHandler } from "./middleware/errorHandler"
 
 export const app = express()
@@ -17,6 +18,10 @@ app.use('/', express.static(path.join(__dirname,'..', 'public')))
 // Route handlers
 app.use('/', rootRoute) // home route
 app.use('/v1/auth', authRoute) // home route
+
+app.use('/v1/dashboard', dashboardRoute) // get dashboard
+// app.use('/v1/auth', authRoute) // account profile (get, update avatar, change password)
+// app.use('/v1/auth', authRoute) // transactions (make investment, make withrawal, get history)
 
 app.all('*', (req, res) => { // send 404
     res.status(404)

@@ -1,12 +1,5 @@
 import { Schema, model } from 'mongoose';
-
-export interface IUser {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    avatar?: string;
-}
+import { IUser } from './types';
 
 const userSchema = new Schema<IUser>({
     firstName: { type: String, required: true },
@@ -17,14 +10,11 @@ const userSchema = new Schema<IUser>({
         get: (): undefined => undefined,
         required: true
     },
-    avatar: String
+    avatar: String,
+    verified: { type: Boolean, default: false }
 }, {
-    toJSON: {
-        getters: true,
-    },
-    toObject: {
-        getters: true,
-    },
+    toJSON: { getters: true },
+    toObject: { getters: true },
     timestamps: true
 });
 

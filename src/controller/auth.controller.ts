@@ -30,7 +30,7 @@ export class Auth implements IAuth {
      */
     signup = asyncHandler(async (req, res) => {
         const { firstName, lastName, email, password } = req.body
-        const duplicate = await this.persistence.getUserByEmail(email)
+        const duplicate = await this.persistence.findUserByEmail(email)
 
         // confirm data
         const errors = validationResult(req)
@@ -45,7 +45,7 @@ export class Auth implements IAuth {
             return
         }
         const hashPass = await this.cryptService.encrypt(password)
-        const newUser = await this.persistence.createUser({ firstName, lastName, email, password: hashPass })
+        const newUser = await this.persistence.createUser({ firstName, lastName, email, password: hashPass, verified: false })
 
         if (newUser) { // created successfully
             res.status(201).json({ message: `Account created succesfully` })
@@ -64,7 +64,7 @@ export class Auth implements IAuth {
      */
     signupWithReferrer = asyncHandler(async (req, res) => {
         const { firstName, lastName, email, password } = req.body
-        const duplicate = await this.persistence.getUserByEmail(email)
+        const duplicate = await this.persistence.findUserByEmail(email)
 
         // confirm data
         const errors = validationResult(req)
@@ -79,7 +79,7 @@ export class Auth implements IAuth {
             return
         }
         const hashPass = await this.cryptService.encrypt(password)
-        const newUser = await this.persistence.createUser({ firstName, lastName, email, password: hashPass })
+        const newUser = await this.persistence.createUser({ firstName, lastName, email, password: hashPass, verified: false })
         await this.persistence.addReferral(req.params.referrer)
 
         if (newUser) { // created successfully

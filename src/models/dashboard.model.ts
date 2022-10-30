@@ -1,22 +1,18 @@
-import { model, Schema, Types } from "mongoose"
+import { model, Schema } from "mongoose"
+import { IDashboard } from "./types";
 
-export interface IDashboard {
-    owner: Types.ObjectId;
-    referralLink: string;
-    referrals: number;
-    investment?: {
-        investmentPlan: string;
-        investmentPackage: string;
-        investmentAmount: number;
-        ROI: number;
+const dashboardSchema = new Schema<IDashboard>(
+    {
+        owner: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+        referralLink: { type: String, required: true },
+        hasInvestment: { type: Boolean, default: false },
+        referrals: { type: Number, default: 0 },
+    },
+    {
+        toJSON: { virtuals: true },
+        // toObject: { virtuals: true },
     }
-}
-
-const dashboardSchema = new Schema<IDashboard>({
-    owner: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
-    referralLink: { type: String, required: true },
-    referrals: Number,
-});
+);
 
 dashboardSchema.virtual('investment', {
     ref: 'Investment',

@@ -1,23 +1,6 @@
-import { Schema, model, Types } from "mongoose"
+import { Schema, model } from "mongoose"
+import { IInvestment, STATUS } from "./types"
 
-export interface IInvestment {
-    investor: Types.ObjectId;
-    investmentPlan: string;
-    investmentPackage: number;
-    investmentAmount: number;
-    ROI: number;
-    createdAt: Date;
-}
-
-export enum plans {
-    BASIC = 'BASIC',
-    PREMIUM = 'PREMIUM',
-    VIP = 'VIP'
-}
-export type invPackage = 'AGRICULTURE' | 'FOREX' | 'STOCK' | 'INHERITANCE' | 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'
-export type BASIC = 'AGRICULTURE' | 'FOREX'
-export type PREMIUM = 'STOCK' | 'INHERITANCE'
-export type VIP = 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'
 
 const investmentSchema = new Schema<IInvestment>(
     {
@@ -25,22 +8,23 @@ const investmentSchema = new Schema<IInvestment>(
         investmentPlan: { type: String, required: true },
         investmentAmount: { type: Number, required: true },
         investmentPackage: { type: Number, required: true },
+        status: {type: String, default: STATUS.PENDING},
+        isActive: { type: Boolean, default: true }
     },
     {
-        toJSON: {
-            virtuals: true,
-        },
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true },
         timestamps: true
     }
 )
 
 investmentSchema.virtual('ROI')
     .get(function () {
-        const timems = Date.now() - new Date(this.createdAt).getTime()
+        const timems = this.createdAt ? Date.now() - new Date(this.createdAt).getTime() : 0
         const daysPassed = Math.round(timems / (1000 * 60 * 60 * 24))
-        // const interest = this.investmentAmount * daysPassed * this.investmentPackage * 0.01
-        // return this.investmentAmount + interest
-        return this.investmentAmount * (1 + daysPassed * this.investmentPackage * 0.01)
+        const interest = this.investmentAmount * daysPassed * this.investmentPackage * 0.01
+        return interest
+        // return this.investmentAmount * (1 + daysPassed * this.investmentPackage * 0.01)
     })
 
 const Investment = model<IInvestment>('Investment', investmentSchema)
