@@ -8,9 +8,11 @@ export interface IDashboardController {
 
 export class DashboardController implements IDashboardController {
     private readonly persistence
+
     constructor(persistence: IMongoService) {
         this.persistence = persistence
     }
+    
     getDashboard = asyncHandler(async (req, res) => {
         const { userId } = req.params
         const dashboard = await this.persistence.getDashboard(userId)

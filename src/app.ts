@@ -6,6 +6,7 @@ import rootRoute from "./routes/root.route"
 import authRoute from "./routes/auth.route"
 import dashboardRoute from "./routes/dashboard.route"
 import investmentRoute from "./routes/investment.route"
+import userRoute from "./routes/user.route"
 import { errHandler } from "./middleware/errorHandler"
 
 export const app = express()
@@ -22,7 +23,7 @@ app.use('/v1/auth', authRoute) // home route
 
 app.use('/v1/dashboard', dashboardRoute) // get dashboard
 app.use('/v1/investment', investmentRoute) // transactions (make investment, make withrawal, get history)
-// app.use('/v1/user', userRoute) // account profile (get, update avatar, change password)
+app.use('/v1/user', userRoute) // account profile ( see users, delete user, update profile, update avatar, change password)
 // app.use('/v1/wallet', walletRoute) // add wallet, remove wallet
 
 app.all('*', (req, res) => { // send 404

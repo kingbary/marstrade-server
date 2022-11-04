@@ -24,7 +24,8 @@ export class MongoService implements IMongoService {
     async addReferral(userId: ID) {
         const dashboard = await this.findDashboard(userId)
         if (!dashboard) {
-            throw new Error("Referrer not found")
+            // throw new Error("Referrer not found")
+            return
         }
         dashboard.referrals += 1
         await dashboard.save()
@@ -91,6 +92,7 @@ export class MongoService implements IMongoService {
 
     async getAllUsers() {
         const users = await User.find().lean()
+        // get populated dash data
         return users
     }
 
@@ -99,7 +101,7 @@ export class MongoService implements IMongoService {
         if (!dashboard) {
             throw new Error("Dashboard not found")
         }
-        dashboard.populate('owner', 'firstName lastName')
+        await dashboard.populate('owner', 'firstName lastName')
         if (dashboard.hasInvestment) {
             await dashboard.populate('investment')
         }

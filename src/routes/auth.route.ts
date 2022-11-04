@@ -9,7 +9,7 @@ import { Encryption } from '../services/encryption.service'
 const auth: IAuth = new Auth(new MongoService(), new Encryption())
 
 router.post('/signup', signupValidator, auth.signup)
-router.post('/signup/:referrer', signupValidator, auth.signupWithReferrer)
 router.post('/login', loginValidator, auth.login)
+// router.post('/verify', auth.verifyUser)
 
 export default router

@@ -7,7 +7,6 @@ import { IEncryption } from "../services/encryption.service"
 
 export interface IAuth {
     signup: e.RequestHandler,
-    signupWithReferrer: e.RequestHandler,
     login: e.RequestHandler,
 }
 
@@ -29,8 +28,7 @@ export class Auth implements IAuth {
      * so no extra validation is done.
      */
     signup = asyncHandler(async (req, res) => {
-        const { firstName, lastName, email, password } = req.body
-        const duplicate = await this.persistence.findUserByEmail(email)
+        const { firstName, lastName, email, password, referrer } = req.body
 
         // confirm data
         const errors = validationResult(req)
@@ -40,47 +38,15 @@ export class Auth implements IAuth {
         }
 
         // Check for duplicate
-        if (duplicate) {
-            res.status(409).json({ message: 'Duplicate mail' })
-            return
-        }
-        const hashPass = await this.cryptService.encrypt(password)
-        const newUser = await this.persistence.createUser({ firstName, lastName, email, password: hashPass, verified: false })
-
-        if (newUser) { // created successfully
-            res.status(201).json({ message: `Account created succesfully` })
-        } else {
-            res.status(400).json({ message: 'Invalid user data received' })
-        }
-    })
-
-    /**
-     * @param {e.Request}req request object
-     * @param {e.Response}res response object
-     * @METHOD POST /v1/auth/signup
-     * @desc Signs up a user.
-     * - It assumes the email and password in the req.body are validated,
-     * so no extra validation is done.
-     */
-    signupWithReferrer = asyncHandler(async (req, res) => {
-        const { firstName, lastName, email, password } = req.body
         const duplicate = await this.persistence.findUserByEmail(email)
-
-        // confirm data
-        const errors = validationResult(req)
-        if (!errors.isEmpty()) {
-            res.status(400).json(errors)
-            return
-        }
-
-        // Check for duplicate
         if (duplicate) {
             res.status(409).json({ message: 'Duplicate mail' })
             return
         }
         const hashPass = await this.cryptService.encrypt(password)
         const newUser = await this.persistence.createUser({ firstName, lastName, email, password: hashPass, verified: false })
-        await this.persistence.addReferral(req.params.referrer)
+
+        if (referrer) await this.persistence.addReferral(req.params.referrer)
 
         if (newUser) { // created successfully
             res.status(201).json({ message: `Account created succesfully` })
@@ -106,7 +72,7 @@ export class Auth implements IAuth {
             res.status(400).json(errors)
             return
         }
-        
+
         const [user, hash] = await this.persistence.authenticate(email)
 
         const isCorrectPassword = await this.cryptService.compare(password, hash)
