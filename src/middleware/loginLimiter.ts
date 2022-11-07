@@ -1,7 +1,7 @@
 import rateLimit from "express-rate-limit"
 import { logEvent } from "./logger"
 
-const loginLimitter = rateLimit({
+const loginLimiter = rateLimit({
     windowMs: 60000, //60secs
     max: 5, // Limit each IP to 5 requests per 'window' per minute
     message: {
@@ -16,4 +16,4 @@ const loginLimitter = rateLimit({
     legacyHeaders: false, // Disable the 'X-RateLimit-*' headers
 })
 
-export default loginLimitter
+export default loginLimiter
