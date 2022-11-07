@@ -13,7 +13,7 @@ class JWTService implements IJWTService {
             const decoded = jwt.verify(payload, JWT_SECRET)
             return decoded
         } catch (error) {
-            throw new Error("Not authorized, token failed.")
+            throw new Error("Forbidden")
         }
     }
 }
