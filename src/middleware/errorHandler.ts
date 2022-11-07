@@ -8,5 +8,9 @@ export const errHandler: ErrorRequestHandler = (error: Error, req, res, next) =>
     if (process.env.NODE_ENV === 'development') console.log(res.statusCode, error)
     const status = (res.statusCode !== 200) ? res.statusCode : 500 // return 500 if no status code
 
+    if (error.name === 'MongooseServerSelectionError') {
+        return res.status(status).json({ message: "Server Error" })
+    }
+
     res.status(status).json({ message: error.message })
 }
