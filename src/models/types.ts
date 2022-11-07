@@ -34,7 +34,7 @@ export interface IInvestmentReq {
 export interface IInvestment {
     investor: ID;
     investmentPlan: PLANS;
-    investmentPackage: number;
+    investmentPackage: string;
     investmentAmount: number;
     status: STATUS,
     isActive: boolean;
