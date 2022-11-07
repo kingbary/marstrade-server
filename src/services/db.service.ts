@@ -13,6 +13,7 @@ export interface IMongoService {
     findUserByEmail(email: string): Promise<IUser | null>;
     findUserById(id: string): Promise<IUser | null>;
     getAllUsers(): Promise<IUser[]>;
+    getAllDashboards(): Promise<IDashboard[]>;
     getDashboard(userId: string): Promise<IDashboard>;
     verifyDeposit(investmentId: ID): Promise<IInvestment>;
     verifyUser(userId: ID): Promise<IUser>;
@@ -94,6 +95,18 @@ export class MongoService implements IMongoService {
         const users = await User.find().lean()
         // get populated dash data
         return users
+    }
+
+    async getAllDashboards() {
+        const dashboards = await Dashboard.find()
+        const populatedDashboards = await Promise.all(dashboards.map(async (dashboard) => {
+            await dashboard.populate('owner')
+            if (dashboard.hasInvestment) {
+                await dashboard.populate('investment')
+            }
+            return dashboard
+        }))
+        return populatedDashboards
     }
 
     async getDashboard(userId: ID) {
