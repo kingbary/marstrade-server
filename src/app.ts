@@ -1,6 +1,7 @@
 import path from "path"
 
 import express from "express"
+import cors from "cors"
 
 import rootRoute from "./routes/root.route"
 import authRoute from "./routes/auth.route"
@@ -16,6 +17,9 @@ app.use(express.json())
 
 // built-in middleware for serving static files (CSS).
 app.use('/', express.static(path.join(__dirname,'..', 'public')))
+
+// 3rd party middleware for handling cors.
+app.use(cors())
 
 // Route handlers
 app.use('/', rootRoute) // home route
