@@ -11,7 +11,8 @@ const userSchema = new Schema<IUser>({
         required: true
     },
     avatar: String,
-    verified: { type: Boolean, default: false }
+    verified: { type: Boolean, default: false },
+    role: { type: String, default: "USER" }
 }, {
     toJSON: { getters: true },
     toObject: { getters: true },

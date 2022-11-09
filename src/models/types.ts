@@ -8,7 +8,9 @@ export interface IUser {
     email: string;
     password: string;
     verified: boolean;
+    role: string;
     avatar?: string;
+    id?: string;
 }
 
 export interface IDashboard {
@@ -42,7 +44,7 @@ export interface IInvestment {
     createdAt: Date;
 }
 
-export enum  PLANS {
+export enum PLANS {
     BASIC = 'BASIC',
     PREMIUM = 'PREMIUM',
     VIP = 'VIP'

@@ -6,6 +6,11 @@ export const errHandler: ErrorRequestHandler = (error: Error, req, res, next) =>
     logEvent(errMsg, 'errLog.log')
 
     if (process.env.NODE_ENV === 'development') console.log(res.statusCode, error)
+    
+    if (error.message === 'Forbidden') {
+        return res.status(403).json({ message: "Forbidden" })
+    }
+
     const status = (res.statusCode !== 200) ? res.statusCode : 500 // return 500 if no status code
 
     if (error.name === 'MongooseServerSelectionError') {

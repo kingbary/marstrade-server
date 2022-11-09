@@ -2,6 +2,7 @@ import path from "path"
 
 import express from "express"
 import cors from "cors"
+import cookieParser from 'cookie-parser'
 
 import rootRoute from "./routes/root.route"
 import authRoute from "./routes/auth.route"
@@ -9,6 +10,7 @@ import dashboardRoute from "./routes/dashboard.route"
 import investmentRoute from "./routes/investment.route"
 import userRoute from "./routes/user.route"
 import { errHandler } from "./middleware/errorHandler"
+import corsOptions from "./config/corsOptions"
 
 export const app = express()
 
@@ -19,7 +21,10 @@ app.use(express.json())
 app.use('/', express.static(path.join(__dirname,'..', 'public')))
 
 // 3rd party middleware for handling cors.
-app.use(cors())
+app.use(cors(corsOptions))
+
+// 3rd party middleware for handling cookies.
+app.use(cookieParser())
 
 // Route handlers
 app.use('/', rootRoute) // home route
