@@ -3,9 +3,14 @@ import Investment from "../models/investment.model";
 import { ID, IDashboard, IInvestment, IInvestmentReq, IUser, STATUS } from "../models/types";
 import User from "../models/user.model";
 
+interface IAuthOptions {
+    email?: string;
+    userId?: ID;
+}
+
 export interface IMongoService {
     addReferral(id: string): Promise<void>;
-    authenticate(email: string): Promise<[IUser, string]>;
+    authenticate(options: IAuthOptions): Promise<[IUser, string]>;
     createInvestment(investmentDetails: IInvestmentReq): Promise<IInvestment>;
     createUser(userDetails: IUser): Promise<IUser | null>;
     deleteUser(userId: ID): Promise<void>;
@@ -15,6 +20,7 @@ export interface IMongoService {
     getAllUsers(): Promise<IUser[]>;
     getAllDashboards(): Promise<IDashboard[]>;
     getDashboard(userId: string): Promise<IDashboard>;
+    updatePassword(userId: ID, password: string): Promise<void>;
     verifyDeposit(investmentId: ID): Promise<IInvestment>;
     verifyUser(userId: ID): Promise<IUser>;
     //addWallet
@@ -32,8 +38,12 @@ export class MongoService implements IMongoService {
         await dashboard.save()
     }
 
-    async authenticate(email: string): Promise<[IUser, string]> {
-        const user = await this.findUserByEmail(email)
+    async authenticate(options: IAuthOptions): Promise<[IUser, string]> {
+        const user = options.email
+            ? await this.findUserByEmail(options.email)
+            : options.userId
+                ? await this.findUserById(options.userId)
+                : null
 
         if (!user) {
             throw new Error("Incorrect details")
@@ -119,6 +129,10 @@ export class MongoService implements IMongoService {
             await dashboard.populate('investment')
         }
         return dashboard
+    }
+
+    async updatePassword(userId: ID, password: string) {
+        const user = await User.findByIdAndUpdate(userId, { password }, { new: true }).exec()
     }
 
     async verifyDeposit(investmentId: ID) {

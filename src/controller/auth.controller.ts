@@ -12,6 +12,7 @@ export interface IAuth {
     login: e.RequestHandler,
     logout: e.RequestHandler,
     refresh: e.RequestHandler,
+    resetPassword: e.RequestHandler,
 }
 
 export class Auth implements IAuth {
@@ -79,7 +80,7 @@ export class Auth implements IAuth {
             return
         }
 
-        const [user, hash] = await this.persistence.authenticate(email)
+        const [user, hash] = await this.persistence.authenticate({ email })
 
         const isCorrectPassword = await this.cryptService.compare(password, hash)
         if (!isCorrectPassword) {
@@ -160,5 +161,39 @@ export class Auth implements IAuth {
         }, process.env.ACCESS_TOKEN_SECRET!, 10 * 60)
 
         res.json({ accessToken, userId: user.id, role: user.role })
+    })
+
+    /**
+     * @param {e.Request}req express request object
+     * @param {e.Response}res express response object
+     * @METHOD POST /v1/auth/reset-password
+     * @desc RESET PASSWORD.
+     * @access Public
+     */
+    resetPassword = asyncHandler(async (req, res) => {
+        // @ts-ignore
+        const userData = req.user
+        const { currentPassword, newPassword, rePassword } = req.body
+        if (!currentPassword || !newPassword || !rePassword) {
+            res.status(400).json({ message: 'Incomplete details' })
+            return
+        }
+
+        if (newPassword !== rePassword) {
+            res.status(400).json({ message: 'Invalid details' })
+            return
+        }
+
+        const [user, hash] = await this.persistence.authenticate({ userId: userData.id })
+
+        const isCorrectPassword = await this.cryptService.compare(currentPassword, hash)
+        if (!isCorrectPassword) {
+            res.status(401).json({ message: 'Invalid details' })
+            return
+        }
+
+        const hashPass = await this.cryptService.encrypt(newPassword)
+        await this.persistence.updatePassword(userData.id, hashPass)
+        res.json({ message: 'Password changed successfully' })
     })
 }

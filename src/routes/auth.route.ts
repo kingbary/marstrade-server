@@ -8,12 +8,14 @@ import { MongoService } from '../services/db.service'
 import { Encryption } from '../services/encryption.service'
 import loginLimiter from '../middleware/loginLimiter'
 import JWTService from '../services/JWT.service'
+import verifyJWT from '../middleware/verifyJWT'
 const auth: IAuth = new Auth(new MongoService(), new Encryption(), new JWTService())
 
 router.post('/login', loginLimiter, loginValidator, auth.login)
 router.post('/signup', signupValidator, auth.signup)
 router.post('/logout', auth.logout)
 router.get('/refresh', auth.refresh)
+router.post('/reset-password', verifyJWT, auth.resetPassword)
 // router.post('/verify', auth.verifyUser)
 // router.post('/kyc/:userId', auth.addKYC)
 
