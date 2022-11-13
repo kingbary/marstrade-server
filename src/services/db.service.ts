@@ -114,7 +114,7 @@ export class MongoService implements IMongoService {
         if (!dashboard) {
             throw new Error("Dashboard not found")
         }
-        await dashboard.populate('owner', 'firstName lastName')
+        await dashboard.populate('owner')
         if (dashboard.hasInvestment) {
             await dashboard.populate('investment')
         }
