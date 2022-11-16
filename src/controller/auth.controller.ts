@@ -5,6 +5,7 @@ import { JwtPayload } from "jsonwebtoken"
 import { IMongoService } from "../services/db.service"
 import { IEncryption } from "../services/encryption.service"
 import { IJWTService } from "../services/jwt.interface"
+import { IMailService } from "../services/mail.service"
 
 
 export interface IAuth {
@@ -13,17 +14,25 @@ export interface IAuth {
     logout: e.RequestHandler,
     refresh: e.RequestHandler,
     resetPassword: e.RequestHandler,
+    sendResetPassURL: e.RequestHandler,
 }
 
 export class Auth implements IAuth {
     private readonly persistence
     private readonly cryptService
     private readonly jwtService
+    private readonly mailService
 
-    constructor(persistence: IMongoService, cryptService: IEncryption, jwtService: IJWTService) {
+    constructor(
+        persistence: IMongoService,
+        cryptService: IEncryption,
+        jwtService: IJWTService,
+        mailService: IMailService
+    ) {
         this.persistence = persistence
         this.cryptService = cryptService
         this.jwtService = jwtService
+        this.mailService = mailService
     }
 
     /**
@@ -171,29 +180,52 @@ export class Auth implements IAuth {
      * @access Public
      */
     resetPassword = asyncHandler(async (req, res) => {
-        // @ts-ignore
-        const userData = req.user
-        const { currentPassword, newPassword, rePassword } = req.body
-        if (!currentPassword || !newPassword || !rePassword) {
+        const { email, currentPassword, newPassword, rePassword } = req.body
+        if (!email || !currentPassword || !newPassword || !rePassword) {
             res.status(400).json({ message: 'Incomplete details' })
             return
         }
 
         if (newPassword !== rePassword) {
-            res.status(400).json({ message: 'Invalid details' })
+            res.status(400).json({ message: 'Passwords must match' })
             return
         }
 
-        const [user, hash] = await this.persistence.authenticate({ userId: userData.id })
+        const [user, hash] = await this.persistence.authenticate({ email })
 
-        const isCorrectPassword = await this.cryptService.compare(currentPassword, hash)
+        const isCorrectPassword = (currentPassword === hash) || await this.cryptService.compare(currentPassword, hash)
         if (!isCorrectPassword) {
             res.status(401).json({ message: 'Invalid details' })
             return
         }
 
         const hashPass = await this.cryptService.encrypt(newPassword)
-        await this.persistence.updatePassword(userData.id, hashPass)
+        await this.persistence.updatePassword(user.id!, hashPass)
         res.json({ message: 'Password changed successfully' })
+    })
+
+    /**
+     * @param {e.Request}req express request object
+     * @param {e.Response}res express response object
+     * @METHOD POST /v1/auth/reset-password
+     * @desc SEND RESET PASSWORD URL.
+     * @access Public
+     */
+    sendResetPassURL = asyncHandler(async (req, res) => {
+        const { email } = req.body
+        const [user, hash] = await this.persistence.authenticate({ email })
+
+        const resetPassToken = this.jwtService.generateToken({
+            "email": user.email,
+            "pass": hash
+        }, process.env.RESET_PASSWORD_SECRET!, 15 * 60)
+
+
+        const origin = req.get('origin')
+        const resetURL = `${origin}/reset-password/${resetPassToken}`
+
+        const sendStatus = await this.mailService.sendPasswordResetMail(user.email, resetURL)
+
+        res.json({ message: 'Mail sent successfully' })
     })
 }

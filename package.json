@@ -31,6 +31,7 @@
     "express-validator": "^6.14.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.6.5",
+    "nodemailer": "^6.8.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -41,6 +42,7 @@
     "@types/jsonwebtoken": "^8.5.9",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^18.8.5",
+    "@types/nodemailer": "^6.4.6",
     "@types/uuid": "^8.3.4",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1"

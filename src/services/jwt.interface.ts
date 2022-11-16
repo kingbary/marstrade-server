@@ -1,8 +1,10 @@
 import { JwtPayload } from "jsonwebtoken";
 
 export interface IJWTPayload {
-    id: string;
+    id?: string;
     role?: string;
+    email?: string;
+    pass?: string;
 }
 
 export interface IJWTService {
