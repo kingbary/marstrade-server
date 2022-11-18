@@ -9,8 +9,12 @@ export interface IUser {
     password: string;
     verified: boolean;
     role: string;
-    avatar?: string;
     id?: string;
+    country?: string;
+    DOB?: string;
+    IDType?: string;
+    IDFront?: string;
+    IDBack?: string;
 }
 
 export interface IDashboard {
@@ -18,12 +22,13 @@ export interface IDashboard {
     referralLink: string;
     referrals: number;
     hasInvestment: boolean;
+    avatar?: string;
     investment?: {
         investmentPlan: string;
         investmentPackage: string;
         investmentAmount: number;
         ROI: number;
-    }
+    };
 }
 
 export interface IInvestmentReq {
@@ -42,6 +47,14 @@ export interface IInvestment {
     isActive: boolean;
     ROI: number;
     createdAt: Date;
+}
+
+export interface IKYCData {
+    country: string;
+    DOB: string;
+    IDType: string;
+    IDFront: string;
+    IDBack: string;
 }
 
 export enum PLANS {

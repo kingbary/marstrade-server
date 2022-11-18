@@ -4,14 +4,16 @@ const userRoute = express.Router()
 import { MongoService } from "../services/db.service"
 import { IUserController, UserController } from "../controller/user.controller"
 import verifyJWT from "../middleware/verifyJWT"
-const userController: IUserController = new UserController(new MongoService())
+import Cloudinary from "../services/cloudinary.service"
+import { imageUpload } from "../middleware/imageUpload.middleware"
+const userController: IUserController = new UserController(new MongoService(), new Cloudinary())
 
 userRoute.use(verifyJWT)
 
 userRoute.get('/get-all', userController.getAllUsers)
 userRoute.delete('/:userId', userController.deleteUser)
-userRoute.put('/:userId', userController.updateAvatar)
-// router.post('/kyc/:userId', auth.addKYC)
+userRoute.put('/:userId', imageUpload.single('avatar'), userController.updateAvatar)
+userRoute.post('/kyc/:userId', imageUpload.array('ID', 2), userController.addKYC)
 // router.post('/verify', auth.verifyUser)
 
 export default userRoute

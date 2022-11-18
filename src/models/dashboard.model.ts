@@ -7,6 +7,7 @@ const dashboardSchema = new Schema<IDashboard>(
         referralLink: { type: String, required: true },
         hasInvestment: { type: Boolean, default: false },
         referrals: { type: Number, default: 0 },
+        avatar: String,
     },
     {
         toJSON: { virtuals: true },

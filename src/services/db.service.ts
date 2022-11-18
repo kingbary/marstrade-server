@@ -1,6 +1,6 @@
 import Dashboard from "../models/dashboard.model";
 import Investment from "../models/investment.model";
-import { ID, IDashboard, IInvestment, IInvestmentReq, IUser, STATUS } from "../models/types";
+import { ID, IDashboard, IInvestment, IInvestmentReq, IKYCData, IUser, STATUS } from "../models/types";
 import User from "../models/user.model";
 
 interface IAuthOptions {
@@ -9,6 +9,7 @@ interface IAuthOptions {
 }
 
 export interface IMongoService {
+    addKYC(userId: ID, KYCData: IKYCData): Promise<boolean>;
     addReferral(id: string): Promise<void>;
     authenticate(options: IAuthOptions): Promise<[IUser, string]>;
     createInvestment(investmentDetails: IInvestmentReq): Promise<IInvestment>;
@@ -20,6 +21,7 @@ export interface IMongoService {
     getAllUsers(): Promise<IUser[]>;
     getAllDashboards(): Promise<IDashboard[]>;
     getDashboard(userId: string): Promise<IDashboard>;
+    updateAvatar(userId: ID, avatar: string): Promise<void>;
     updatePassword(userId: ID, password: string): Promise<void>;
     verifyDeposit(investmentId: ID): Promise<IInvestment>;
     verifyUser(userId: ID): Promise<IUser>;
@@ -28,6 +30,27 @@ export interface IMongoService {
 }
 
 export class MongoService implements IMongoService {
+    async addKYC(userId: ID, KYCData: IKYCData) {
+        const user = await this.findUserById(userId)
+
+        if (!user) {
+            throw new Error("User not found")
+        }
+
+        try {
+            user.country = KYCData.country
+            user.DOB = KYCData.DOB
+            user.IDType = KYCData.IDType
+            user.IDFront = KYCData.IDFront
+            user.IDBack = KYCData.IDBack
+            await user.save()
+            
+            return true
+        } catch (error) {
+            return false
+        }
+    }
+
     async addReferral(userId: ID) {
         const dashboard = await this.findDashboard(userId)
         if (!dashboard) {
@@ -36,6 +59,7 @@ export class MongoService implements IMongoService {
         }
         dashboard.referrals += 1
         await dashboard.save()
+        return
     }
 
     async authenticate(options: IAuthOptions): Promise<[IUser, string]> {
@@ -129,6 +153,19 @@ export class MongoService implements IMongoService {
             await dashboard.populate('investment')
         }
         return dashboard
+    }
+
+    async updateAvatar(userId: ID, avatar: string) {
+        const dashboard = await this.findDashboard(userId)
+
+        if (!dashboard) {
+            throw new Error('Dashboard not found')
+        }
+
+        dashboard.avatar = avatar
+        await dashboard.save()
+
+        return
     }
 
     async updatePassword(userId: ID, password: string) {
