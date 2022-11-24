@@ -10,6 +10,7 @@ export interface IUserController {
     deleteUser: e.RequestHandler,
     getAllUsers: e.RequestHandler,
     updateAvatar: e.RequestHandler,
+    verifyUser: e.RequestHandler,
 }
 
 export class UserController implements IUserController {
@@ -79,9 +80,9 @@ export class UserController implements IUserController {
     deleteUser = asyncHandler(async (req, res) => {
         const userId: ID = req.params.userId
 
-        await this.persistence.deleteUser(userId)
+        const { message, statusCode } = await this.persistence.deleteUser(userId)
 
-        res.json({ message: `User ${userId} deleted successfully` })
+        res.status(statusCode).json({ message })
     })
 
     /**
@@ -118,6 +119,18 @@ export class UserController implements IUserController {
 
         await this.persistence.updateAvatar(userId, imageURL!)
         res.status(statusCode).json({ message })
+    })
 
+    /**
+     * @param {e.Request}req request object
+     * @param {e.Response}res response object
+     * @METHOD PUT /v1/user/:userId
+     * @desc Updates a user profile.
+     */
+    verifyUser = asyncHandler(async (req, res) => {
+        const { userId } = req.params
+        const { statusCode, message } = await this.persistence.verifyUser(userId)
+
+        res.status(statusCode).json({ message })
     })
 }

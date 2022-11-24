@@ -1,17 +1,11 @@
 import nodemailer from 'nodemailer'
 import SMTPTransport from 'nodemailer/lib/smtp-transport'
-import { IUser } from '../models/types'
+import { IServiceResponse, IUser } from '../models/types'
 
 export interface IMailService {
-    sendMail: (to: string, subject: string, html: string) => Promise<SMTPTransport.SentMessageInfo | {
-        error: string;
-    }>;
-    sendWelcomeMail: (user: IUser) => Promise<SMTPTransport.SentMessageInfo | {
-        error: string;
-    }>;
-    sendPasswordResetMail: (email: string, url: string) => Promise<SMTPTransport.SentMessageInfo | {
-        error: string;
-    }>;
+    sendMail: (to: string, subject: string, html: string) => Promise<SMTPTransport.SentMessageInfo>;
+    sendWelcomeMail: (user: IUser) => Promise<IServiceResponse>;
+    sendPasswordResetMail: (email: string, url: string) => Promise<SMTPTransport.SentMessageInfo>;
 }
 
 class MailService implements IMailService {
@@ -63,9 +57,18 @@ class MailService implements IMailService {
             </html>`
         try {
             const sendMail = await this.sendMail(to, "WELCOME TO MARSTRADE", verificationMail)
-            return sendMail
+            process.env.NODE_ENV === 'development' && console.log(sendMail)
+            return {
+                isSuccess: true,
+                message: "Mail sent succesfully",
+                statusCode: 200,
+            }
         } catch (err) {
-            throw new Error("Email verification failed")
+            return {
+                isSuccess: false,
+                message: "Email verification failed",
+                statusCode: 500,
+            }
         }
     }
 

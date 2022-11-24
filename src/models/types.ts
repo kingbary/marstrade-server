@@ -49,12 +49,25 @@ export interface IInvestment {
     createdAt: Date;
 }
 
+export interface IDBResponse {
+    statusCode: number;
+    message: string;
+}
+
 export interface IKYCData {
     country: string;
     DOB: string;
     IDType: string;
     IDFront: string;
     IDBack: string;
+}
+
+
+export interface IServiceResponse {
+    isSuccess: boolean,
+    message: string,
+    statusCode: number,
+    imageURL?: string,
 }
 
 export enum PLANS {
@@ -68,7 +81,7 @@ export enum STATUS {
     APPROVED = 'APPROVED'
 }
 
-export type invPackageType = 'AGRICULTURE' | 'FOREX' | 'STOCK' | 'INHERITANCE' | 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'
+export type invPackageType = 'AGRICULTURE' | 'FOREX' | 'REAL_ESTATE' | 'INHERITANCE' | 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'
 export type BASIC = 'AGRICULTURE' | 'FOREX'
-export type PREMIUM = 'STOCK' | 'INHERITANCE'
+export type PREMIUM = 'REAL_ESTATE' | 'INHERITANCE'
 export type VIP = 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'

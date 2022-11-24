@@ -14,6 +14,6 @@ userRoute.get('/get-all', userController.getAllUsers)
 userRoute.delete('/:userId', userController.deleteUser)
 userRoute.put('/:userId', imageUpload.single('avatar'), userController.updateAvatar)
 userRoute.post('/kyc/:userId', imageUpload.array('ID', 2), userController.addKYC)
-// router.post('/verify', auth.verifyUser)
+userRoute.patch('/verify/:userId', userController.verifyUser)
 
 export default userRoute

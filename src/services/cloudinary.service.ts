@@ -1,15 +1,9 @@
 import { v2 as cloudinary } from "cloudinary"
 import { unlinkSync } from "fs"
-
-export interface ICloudinaryResponse {
-    isSuccess: boolean,
-    message: string,
-    statusCode: number,
-    imageURL?: string,
-}
+import { IServiceResponse } from "../models/types"
 
 export interface ICloudinary {
-    uploadImage: (imageToUpload: string, filename: string, folder: string) => Promise<ICloudinaryResponse>
+    uploadImage: (imageToUpload: string, filename: string, folder: string) => Promise<IServiceResponse>
 }
 
 class Cloudinary implements ICloudinary {

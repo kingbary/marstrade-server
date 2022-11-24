@@ -1,7 +1,7 @@
 import Dashboard from "../models/dashboard.model";
 import Investment from "../models/investment.model";
-import { ID, IDashboard, IInvestment, IInvestmentReq, IKYCData, IUser, STATUS } from "../models/types";
 import User from "../models/user.model";
+import { ID, IDashboard, IDBResponse, IInvestment, IInvestmentReq, IKYCData, IServiceResponse, IUser, STATUS } from "../models/types";
 
 interface IAuthOptions {
     email?: string;
@@ -13,8 +13,8 @@ export interface IMongoService {
     addReferral(id: string): Promise<void>;
     authenticate(options: IAuthOptions): Promise<[IUser, string]>;
     createInvestment(investmentDetails: IInvestmentReq): Promise<IInvestment>;
-    createUser(userDetails: IUser): Promise<IUser | null>;
-    deleteUser(userId: ID): Promise<void>;
+    createUser(userDetails: IUser): Promise<IUser>;
+    deleteUser(userId: ID): Promise<IServiceResponse>;
     findDashboard(userId: string): Promise<IDashboard | null>;
     findUserByEmail(email: string): Promise<IUser | null>;
     findUserById(id: string): Promise<IUser | null>;
@@ -24,7 +24,7 @@ export interface IMongoService {
     updateAvatar(userId: ID, avatar: string): Promise<void>;
     updatePassword(userId: ID, password: string): Promise<void>;
     verifyDeposit(investmentId: ID): Promise<IInvestment>;
-    verifyUser(userId: ID): Promise<IUser>;
+    verifyUser(userId: ID): Promise<IDBResponse>;
     //addWallet
     //confirmWithdrawal
 }
@@ -44,7 +44,7 @@ export class MongoService implements IMongoService {
             user.IDFront = KYCData.IDFront
             user.IDBack = KYCData.IDBack
             await user.save()
-            
+
             return true
         } catch (error) {
             return false
@@ -105,9 +105,15 @@ export class MongoService implements IMongoService {
     }
 
     async deleteUser(userId: ID) {
-        const inv = await Investment.findOneAndDelete({ investor: userId })
-        const dash = await Dashboard.findOneAndDelete({ owner: userId })
-        const user = await User.findOneAndDelete({ _id: userId })
+        const inv = await Investment.findOneAndDelete({ investor: userId }).exec()
+        const dash = await Dashboard.findOneAndDelete({ owner: userId }).exec()
+        const user = await User.findOneAndDelete({ _id: userId }).exec()
+        
+        return {
+            isSuccess: true,
+            message: `User ${user?.id ?? ''} deleted successfully`,
+            statusCode: 200,
+        }
     }
 
     async findDashboard(userId: ID) {
@@ -189,9 +195,13 @@ export class MongoService implements IMongoService {
 
         if (!user) throw new Error('User not found')
 
-        user.verified = true
-        await user.save()
+        try {
+            user.verified = true
+            await user.save()
 
-        return user
+            return { statusCode: 200, message: 'User verified succssfully' }
+        } catch (error) {
+            return { statusCode: 500, message: 'User not verified' }
+        }
     }
 }

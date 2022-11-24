@@ -60,7 +60,22 @@ export class Auth implements IAuth {
             return
         }
         const hashPass = await this.cryptService.encrypt(password)
-        const newUser = await this.persistence.createUser({ firstName, lastName, email, password: hashPass, verified: false, role: 'USER' })
+        const userData = {
+            firstName,
+            lastName,
+            email,
+            password: hashPass,
+            verified: false,
+            role: 'USER'
+        }
+        const newUser = await this.persistence.createUser(userData)
+
+        const mailResponse = await this.mailService.sendWelcomeMail(newUser)
+        if (!mailResponse.isSuccess) {
+            const deleteResponse = await this.persistence.deleteUser(newUser.id!)
+            res.status(mailResponse.statusCode).json({ message: mailResponse.message })
+            return
+        }
 
         if (referrer) await this.persistence.addReferral(req.params.referrer)
 
