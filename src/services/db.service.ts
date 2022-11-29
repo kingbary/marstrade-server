@@ -1,7 +1,8 @@
 import Dashboard from "../models/dashboard.model";
 import Investment from "../models/investment.model";
 import User from "../models/user.model";
-import { ID, IDashboard, IDBResponse, IInvestment, IInvestmentReq, IKYCData, IServiceResponse, IUser, STATUS } from "../models/types";
+import { ID, IDashboard, IDBResponse, IInvestment, IInvestmentReq, IKYCData, IServiceResponse, IUser, IWallet, STATUS } from "../models/types";
+import Wallet from "../models/wallet.model";
 
 interface IAuthOptions {
     email?: string;
@@ -11,6 +12,7 @@ interface IAuthOptions {
 export interface IMongoService {
     addKYC(userId: ID, KYCData: IKYCData): Promise<boolean>;
     addReferral(id: string): Promise<void>;
+    addWallet(walletData: IWallet): Promise<IDBResponse>;
     authenticate(options: IAuthOptions): Promise<[IUser, string]>;
     createInvestment(investmentDetails: IInvestmentReq): Promise<IInvestment>;
     createUser(userDetails: IUser): Promise<IUser>;
@@ -18,14 +20,14 @@ export interface IMongoService {
     findDashboard(userId: string): Promise<IDashboard | null>;
     findUserByEmail(email: string): Promise<IUser | null>;
     findUserById(id: string): Promise<IUser | null>;
-    getAllUsers(): Promise<IUser[]>;
     getAllDashboards(): Promise<IDashboard[]>;
+    getAllUsers(): Promise<IUser[]>;
+    getAllWallets(): Promise<IWallet[]>;
     getDashboard(userId: string): Promise<IDashboard>;
     updateAvatar(userId: ID, avatar: string): Promise<void>;
     updatePassword(userId: ID, password: string): Promise<void>;
     verifyDeposit(investmentId: ID): Promise<IInvestment>;
     verifyUser(userId: ID): Promise<IDBResponse>;
-    //addWallet
     //confirmWithdrawal
 }
 
@@ -60,6 +62,16 @@ export class MongoService implements IMongoService {
         dashboard.referrals += 1
         await dashboard.save()
         return
+    }
+
+    async addWallet(walletData: IWallet) {
+        const wallet = new Wallet(walletData)
+        try {
+            await wallet.save()
+            return { statusCode: 200, message: 'Wallet created succssfully' }
+        } catch (error) {
+            return { statusCode: 500, message: 'Wallet not created' }
+        }
     }
 
     async authenticate(options: IAuthOptions): Promise<[IUser, string]> {
@@ -108,7 +120,7 @@ export class MongoService implements IMongoService {
         const inv = await Investment.findOneAndDelete({ investor: userId }).exec()
         const dash = await Dashboard.findOneAndDelete({ owner: userId }).exec()
         const user = await User.findOneAndDelete({ _id: userId }).exec()
-        
+
         return {
             isSuccess: true,
             message: `User ${user?.id ?? ''} deleted successfully`,
@@ -147,6 +159,11 @@ export class MongoService implements IMongoService {
             return dashboard
         }))
         return populatedDashboards
+    }
+
+    async getAllWallets() {
+        const wallets = await Wallet.find().lean()
+        return wallets
     }
 
     async getDashboard(userId: ID) {

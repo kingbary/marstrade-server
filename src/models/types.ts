@@ -17,6 +17,18 @@ export interface IUser {
     IDBack?: string;
 }
 
+export interface IWallet {
+    type: string;
+    address: string;
+    barcode: string;
+}
+
+export interface IWalletGroup {
+    btc: IWallet;
+    eth: IWallet;
+    usdt: IWallet;
+}
+
 export interface IDashboard {
     owner: ID;
     referralLink: string;
