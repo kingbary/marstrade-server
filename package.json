@@ -1,5 +1,5 @@
 {
-  "name": "bitsolutionfx-server",
+  "name": "marstrade-server",
   "version": "1.0.0",
   "description": "",
   "main": "dist/server.js",
@@ -12,9 +12,9 @@
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/kingbary/bitsolutionfx-server/issues"
+    "url": "https://github.com/kingbary/marstrade-server/issues"
   },
-  "homepage": "https://github.com/kingbary/bitsolutionfx-server#readme",
+  "homepage": "https://github.com/kingbary/marstrade-server#readme",
   "dependencies": {
     "bcrypt": "^5.1.0",
     "cloudinary": "^1.32.0",
