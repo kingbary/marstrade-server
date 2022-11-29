@@ -41,6 +41,9 @@ export interface IDashboard {
         investmentAmount: number;
         ROI: number;
     };
+    btcWallet: ID
+    ethWallet: ID
+    usdtWallet: ID
 }
 
 export interface IInvestmentReq {

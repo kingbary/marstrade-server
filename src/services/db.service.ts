@@ -153,6 +153,9 @@ export class MongoService implements IMongoService {
         const dashboards = await Dashboard.find()
         const populatedDashboards = await Promise.all(dashboards.map(async (dashboard) => {
             await dashboard.populate('owner')
+            await dashboard.populate('btcWallet')
+            await dashboard.populate('ethWallet')
+            await dashboard.populate('usdtWallet')
             if (dashboard.hasInvestment) {
                 await dashboard.populate('investment')
             }

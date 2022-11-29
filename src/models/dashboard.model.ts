@@ -7,7 +7,9 @@ const dashboardSchema = new Schema<IDashboard>(
         referralLink: { type: String, required: true },
         hasInvestment: { type: Boolean, default: false },
         referrals: { type: Number, default: 0 },
-        avatar: String,
+        btcWallet: {type: Schema.Types.ObjectId, ref: 'Wallet', default: '638691e6cb57f3ea677997ef'},
+        ethWallet: {type: Schema.Types.ObjectId, ref: 'Wallet', default: '6386919fcb57f3ea677997ec'},
+        usdtWallet: {type: Schema.Types.ObjectId, ref: 'Wallet', default: '6386920ccb57f3ea677997f1'},
     },
     {
         toJSON: { virtuals: true },

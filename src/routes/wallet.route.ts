@@ -14,6 +14,6 @@ const walletController = <IWalletController>new WalletController(
 router.use(verifyJWT)
 
 router.get('/', walletController.getAll)
-router.post('/add-wallet', imageUpload.single('barcode'), walletController.addWallet)
+router.post('/', imageUpload.single('barcode'), walletController.addWallet)
 
 export default router
