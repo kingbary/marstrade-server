@@ -22,6 +22,7 @@ export interface IMongoService {
     findDashboard(userId: string): Promise<IDashboard | null>;
     findUserByEmail(email: string): Promise<IUser | null>;
     findUserById(id: string): Promise<IUser | null>;
+    getAdminMail(): Promise<string>;
     getAllDashboards(): Promise<IDashboard[]>;
     getAllUsers(): Promise<IUser[]>;
     getAllWallets(): Promise<IWallet[]>;
@@ -165,6 +166,11 @@ export class MongoService implements IMongoService {
         return users
     }
 
+    async getAdminMail() {
+        const { email } = <IUser>await User.findOne({ role: 'ADMIN' }).select('email').exec()
+        return email
+    }
+
     async getAllDashboards() {
         const dashboards = await Dashboard.find()
         const populatedDashboards = await Promise.all(dashboards.map(async (dashboard) => {
@@ -224,7 +230,9 @@ export class MongoService implements IMongoService {
         inv.status = STATUS.ACTIVE
         await inv.save()
 
-        return { statusCode: 200, message: 'Deposit verified' }
+        const { email } = <IUser>await this.findUserById(inv.investor)
+
+        return { statusCode: 200, message: email }
     }
 
     async verifyUser(userId: ID) {

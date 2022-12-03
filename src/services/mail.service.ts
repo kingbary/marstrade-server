@@ -1,11 +1,14 @@
 import nodemailer from 'nodemailer'
 import SMTPTransport from 'nodemailer/lib/smtp-transport'
 import { IServiceResponse, IUser } from '../models/types'
+import { depositConfirmedTemplate, depositNotifyTemplate } from './mailTemplates';
 
 export interface IMailService {
     sendMail: (to: string, subject: string, html: string) => Promise<SMTPTransport.SentMessageInfo>;
     sendWelcomeMail: (user: IUser) => Promise<IServiceResponse>;
     sendPasswordResetMail: (email: string, url: string) => Promise<SMTPTransport.SentMessageInfo>;
+    sendDepositConfirmMail: (email: string) => Promise<SMTPTransport.SentMessageInfo>;
+    sendDepositNotifyMail: (email: string) => Promise<SMTPTransport.SentMessageInfo>;
 }
 
 class MailService implements IMailService {
@@ -91,6 +94,26 @@ class MailService implements IMailService {
 
         try {
             const sendMail = await this.sendMail(to, "RESET PASSWORD", passwordResetMail)
+            return sendMail
+        } catch (error) {
+            throw new Error("Mail not sent")
+        }
+    }
+
+    sendDepositConfirmMail = async (email: string) => {
+        const to = email
+        try {
+            const sendMail = await this.sendMail(to, "DEPOSIT CONFIRMATION", depositConfirmedTemplate)
+            return sendMail
+        } catch (error) {
+            throw new Error("Mail not sent")
+        }
+    }
+
+    sendDepositNotifyMail = async (email: string) => {
+        const to = email
+        try {
+            const sendMail = await this.sendMail(to, "NOTIFICATION OF DEPOSIT", depositNotifyTemplate)
             return sendMail
         } catch (error) {
             throw new Error("Mail not sent")

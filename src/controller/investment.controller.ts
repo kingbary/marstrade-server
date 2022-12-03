@@ -1,8 +1,9 @@
 import e from "express"
 import asyncHandler from "express-async-handler"
-import { ID, IInvestment, IInvestmentReq, invPackageType, PLANS } from "../models/types"
+import { ID, IInvestmentReq, PLANS } from "../models/types"
 import { ICloudinary } from "../services/cloudinary.service";
 import { IMongoService } from "../services/db.service"
+import { IMailService } from "../services/mail.service";
 
 export interface IInvestmentController {
     makeInvestment: e.RequestHandler;
@@ -12,10 +13,12 @@ export interface IInvestmentController {
 export class InvestmentController implements IInvestmentController {
     private readonly persistence
     private readonly objService
+    private readonly mailService
 
-    constructor(persistence: IMongoService, objService: ICloudinary) {
+    constructor(persistence: IMongoService, objService: ICloudinary, mailService: IMailService) {
         this.persistence = persistence
         this.objService = objService
+        this.mailService = mailService
     }
 
     makeInvestment = asyncHandler(async (req, res) => {
@@ -45,12 +48,25 @@ export class InvestmentController implements IInvestmentController {
             return
         }
         const { statusCode, message } = await this.persistence.addReceipttoInv(investment.id!, imageURL)
+
+        if (statusCode === 200) {
+            const adminMail = await this.persistence.getAdminMail()
+            await this.mailService.sendDepositNotifyMail(adminMail)
+        }
+
         res.status(statusCode).json(message)
     })
 
     verifyDeposit = asyncHandler(async (req, res) => {
         const transId: ID = req.body.transId
         const { statusCode, message } = await this.persistence.verifyDeposit(transId)
+
+        if (statusCode === 200) {
+            await this.mailService.sendDepositConfirmMail(message)
+            res.status(statusCode).json('Deposit verified')
+            return
+        }
+
         res.status(statusCode).json(message)
     })
 }

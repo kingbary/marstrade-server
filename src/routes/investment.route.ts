@@ -6,10 +6,14 @@ import { IInvestmentController, InvestmentController } from "../controller/inves
 import { imageUpload } from "../middleware/imageUpload.middleware"
 import verifyJWT from "../middleware/verifyJWT"
 import Cloudinary from "../services/cloudinary.service"
+import MailService from "../services/mail.service"
+
+const { SMTP_SERVICE, SMTP_AUTH_USER, SMTP_AUTH_PASS } = process.env
 
 const investmentController: IInvestmentController = new InvestmentController(
     new MongoService(),
-    new Cloudinary())
+    new Cloudinary(),
+    new MailService(SMTP_SERVICE!, SMTP_AUTH_USER!, SMTP_AUTH_PASS!))
 
 investmentRoute.use(verifyJWT)
 
