@@ -44,7 +44,7 @@ export class WalletController implements IWalletController {
     deleteWallet = asyncHandler(async (req, res) => {
         const { walletId } = req.body
         const { message, statusCode } = await this.persistence.deleteWallet(walletId)
-        res.status(statusCode).json(message)
+        res.status(statusCode).json({ message })
     })
 
     getAll = asyncHandler(async (req, res) => {
@@ -53,8 +53,8 @@ export class WalletController implements IWalletController {
     })
 
     updateForUser = asyncHandler(async (req, res) => {
-        const { dashId, walletId, type } = req.body
-        const { message, statusCode } = await this.persistence.updateWallet(dashId, walletId, type)
-        res.status(statusCode).json(message)
+        const { userId, walletId, type } = req.body
+        const { message, statusCode } = await this.persistence.updateWallet(userId, walletId, type)
+        res.status(statusCode).json({ message })
     })
 }
