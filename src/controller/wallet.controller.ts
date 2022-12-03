@@ -5,7 +5,9 @@ import { IMongoService } from "../services/db.service"
 
 export interface IWalletController {
     addWallet: e.RequestHandler
+    deleteWallet: e.RequestHandler
     getAll: e.RequestHandler
+    updateForUser: e.RequestHandler
 }
 
 export class WalletController implements IWalletController {
@@ -39,8 +41,20 @@ export class WalletController implements IWalletController {
         res.status(dbStatusCode).json(dbMessage)
     })
 
+    deleteWallet = asyncHandler(async (req, res) => {
+        const { walletId } = req.body
+        const { message, statusCode } = await this.persistence.deleteWallet(walletId)
+        res.status(statusCode).json(message)
+    })
+
     getAll = asyncHandler(async (req, res) => {
         const wallets = await this.persistence.getAllWallets()
         res.json(wallets)
+    })
+
+    updateForUser = asyncHandler(async (req, res) => {
+        const { dashId, walletId, type } = req.body
+        const { message, statusCode } = await this.persistence.updateWallet(dashId, walletId, type)
+        res.status(statusCode).json(message)
     })
 }

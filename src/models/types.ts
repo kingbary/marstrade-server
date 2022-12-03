@@ -1,6 +1,7 @@
 import { Types } from "mongoose"
 
 export type ID = Types.ObjectId | string
+export type WALLET = 'btc' | 'eth' | 'usdt'
 
 export interface IUser {
     firstName: string;
@@ -41,23 +42,26 @@ export interface IDashboard {
         investmentAmount: number;
         ROI: number;
     };
-    btcWallet: ID
-    ethWallet: ID
-    usdtWallet: ID
+    btc: ID
+    eth: ID
+    usdt: ID
 }
 
 export interface IInvestmentReq {
     investor: ID;
     investmentPlan: PLANS;
-    investmentPackage: number;
+    investmentPackage: string;
     investmentAmount: number;
+    receipt: string;
 }
 
 export interface IInvestment {
+    id?: string;
     investor: ID;
     investmentPlan: PLANS;
     investmentPackage: string;
     investmentAmount: number;
+    receipt: string;
     status: STATUS,
     isActive: boolean;
     ROI: number;
@@ -93,7 +97,8 @@ export enum PLANS {
 
 export enum STATUS {
     PENDING = 'PENDING',
-    APPROVED = 'APPROVED'
+    ACTIVE = 'ACTIVE',
+    COMPLETED = 'COMPLETED',
 }
 
 export type invPackageType = 'AGRICULTURE' | 'FOREX' | 'REAL_ESTATE' | 'INHERITANCE' | 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'

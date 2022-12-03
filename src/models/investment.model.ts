@@ -19,6 +19,7 @@ const investmentSchema = new Schema<IInvestment>(
         investmentPlan: { type: String, required: true },
         investmentAmount: { type: Number, required: true },
         investmentPackage: { type: String, required: true },
+        receipt: { type: String, required: true },
         status: { type: String, default: STATUS.PENDING },
         isActive: { type: Boolean, default: true }
     },

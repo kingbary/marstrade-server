@@ -1,7 +1,7 @@
 import Dashboard from "../models/dashboard.model";
 import Investment from "../models/investment.model";
 import User from "../models/user.model";
-import { ID, IDashboard, IDBResponse, IInvestment, IInvestmentReq, IKYCData, IServiceResponse, IUser, IWallet, STATUS } from "../models/types";
+import { ID, IDashboard, IDBResponse, IInvestment, IInvestmentReq, IKYCData, IUser, IWallet, STATUS, WALLET } from "../models/types";
 import Wallet from "../models/wallet.model";
 
 interface IAuthOptions {
@@ -12,11 +12,13 @@ interface IAuthOptions {
 export interface IMongoService {
     addKYC(userId: ID, KYCData: IKYCData): Promise<boolean>;
     addReferral(id: string): Promise<void>;
+    addReceipttoInv(id: ID, image: string): Promise<IDBResponse>;
     addWallet(walletData: IWallet): Promise<IDBResponse>;
     authenticate(options: IAuthOptions): Promise<[IUser, string]>;
     createInvestment(investmentDetails: IInvestmentReq): Promise<IInvestment>;
     createUser(userDetails: IUser): Promise<IUser>;
-    deleteUser(userId: ID): Promise<IServiceResponse>;
+    deleteUser(userId: ID): Promise<IDBResponse>;
+    deleteWallet(walletId: ID): Promise<IDBResponse>;
     findDashboard(userId: string): Promise<IDashboard | null>;
     findUserByEmail(email: string): Promise<IUser | null>;
     findUserById(id: string): Promise<IUser | null>;
@@ -24,9 +26,10 @@ export interface IMongoService {
     getAllUsers(): Promise<IUser[]>;
     getAllWallets(): Promise<IWallet[]>;
     getDashboard(userId: string): Promise<IDashboard>;
-    updateAvatar(userId: ID, avatar: string): Promise<void>;
+    updateAvatar(userId: ID, avatar: string): Promise<IDBResponse>;
     updatePassword(userId: ID, password: string): Promise<void>;
-    verifyDeposit(investmentId: ID): Promise<IInvestment>;
+    updateWallet(userId: ID, walletId: ID, type: string): Promise<IDBResponse>;
+    verifyDeposit(investmentId: ID): Promise<IDBResponse>;
     verifyUser(userId: ID): Promise<IDBResponse>;
     //confirmWithdrawal
 }
@@ -62,6 +65,15 @@ export class MongoService implements IMongoService {
         dashboard.referrals += 1
         await dashboard.save()
         return
+    }
+
+    async addReceipttoInv(id: ID, image: string) {
+        const investment = await Investment.findByIdAndUpdate(id, {
+            receipt: image
+        }).exec()
+
+        if (!investment) return { statusCode: 500, message: 'An error occured. Try again' }
+        return { statusCode: 200, message: 'Deposit made' }
     }
 
     async addWallet(walletData: IWallet) {
@@ -109,9 +121,9 @@ export class MongoService implements IMongoService {
 
         const dashboard = new Dashboard({
             owner: user._id,
-            referralLink: `${process.env.BASE_URL}/signup/${user._id}`,
         })
-        await dashboard.save()
+        dashboard.referralLink = `${process.env.BASE_URL}/signup/${dashboard._id}`,
+            await dashboard.save()
 
         return user
     }
@@ -122,10 +134,14 @@ export class MongoService implements IMongoService {
         const user = await User.findOneAndDelete({ _id: userId }).exec()
 
         return {
-            isSuccess: true,
             message: `User ${user?.id ?? ''} deleted successfully`,
             statusCode: 200,
         }
+    }
+
+    async deleteWallet(walletId: ID) {
+        const dashB = await Wallet.findByIdAndDelete(walletId).exec()
+        return { statusCode: 200, message: 'Deleted successfully' }
     }
 
     async findDashboard(userId: ID) {
@@ -152,10 +168,7 @@ export class MongoService implements IMongoService {
     async getAllDashboards() {
         const dashboards = await Dashboard.find()
         const populatedDashboards = await Promise.all(dashboards.map(async (dashboard) => {
-            await dashboard.populate('owner')
-            await dashboard.populate('btcWallet')
-            await dashboard.populate('ethWallet')
-            await dashboard.populate('usdtWallet')
+            await dashboard.populate('owner btc eth usdt')
             if (dashboard.hasInvestment) {
                 await dashboard.populate('investment')
             }
@@ -174,7 +187,7 @@ export class MongoService implements IMongoService {
         if (!dashboard) {
             throw new Error("Dashboard not found")
         }
-        await dashboard.populate('owner')
+        await dashboard.populate('owner btc eth usdt')
         if (dashboard.hasInvestment) {
             await dashboard.populate('investment')
         }
@@ -184,30 +197,34 @@ export class MongoService implements IMongoService {
     async updateAvatar(userId: ID, avatar: string) {
         const dashboard = await this.findDashboard(userId)
 
-        if (!dashboard) {
-            throw new Error('Dashboard not found')
-        }
+        if (!dashboard) return { statusCode: 500, message: 'Dashboard not found' }
 
         dashboard.avatar = avatar
         await dashboard.save()
-
-        return
+        return { statusCode: 200, message: 'Avatar updated' }
     }
 
     async updatePassword(userId: ID, password: string) {
         const user = await User.findByIdAndUpdate(userId, { password }, { new: true }).exec()
     }
 
+    async updateWallet(userId: ID, walletId: ID, type: WALLET) {
+        const dash = await this.findDashboard(userId)
+        if (!dash) return { statusCode: 500, message: 'Dashboard not found' }
+
+        dash[type] = walletId
+        await dash.save()
+        return { statusCode: 200, message: 'Wallet updated' }
+    }
+
     async verifyDeposit(investmentId: ID) {
         const inv = await Investment.findById(investmentId).exec()
-        if (!inv) {
-            throw new Error('Investment not found')
-        }
+        if (!inv) return { statusCode: 500, message: 'An error occured. Try again' }
 
-        inv.status = STATUS.APPROVED
+        inv.status = STATUS.ACTIVE
         await inv.save()
 
-        return inv
+        return { statusCode: 200, message: 'Deposit verified' }
     }
 
     async verifyUser(userId: ID) {
