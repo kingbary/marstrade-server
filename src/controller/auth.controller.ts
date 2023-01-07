@@ -68,7 +68,8 @@ export class Auth implements IAuth {
             verified: false,
             role: 'USER'
         }
-        const newUser = await this.persistence.createUser(userData)
+        const origin = <string>req.get('origin')
+        const newUser = await this.persistence.createUser(userData, origin)
 
         const mailResponse = await this.mailService.sendWelcomeMail(newUser)
         if (!mailResponse.isSuccess) {

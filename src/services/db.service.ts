@@ -1,22 +1,37 @@
 import Dashboard from "../models/dashboard.model";
 import Investment from "../models/investment.model";
 import User from "../models/user.model";
-import { ID, IDashboard, IDBResponse, IInvestment, IInvestmentReq, IKYCData, IUser, IWallet, STATUS, WALLET } from "../models/types";
+import { ID, IDashboard, IDBResponse, IInvestment, IInvestmentReq, IKYCData, ITransaction, IUser, IWallet, STATUS, TransDetails, WALLET } from "../models/types";
 import Wallet from "../models/wallet.model";
+import Transaction from "../models/transaction.model";
 
 interface IAuthOptions {
     email?: string;
     userId?: ID;
 }
 
+
+export const packageConverter: { [key: string]: number } = {
+    'AGRICULTURE': 5,
+    'FOREX': 2.5,
+    'STOCK': 2.5,
+    'INHERITANCE': 7.5,
+    'ENERGY': 7.5,
+    'CRYPTOCURRENCY': 2.5,
+    'METAL': 7.5,
+    'REAL_ESTATE': 5
+}
+
 export interface IMongoService {
     addKYC(userId: ID, KYCData: IKYCData): Promise<boolean>;
     addReferral(id: string): Promise<void>;
-    addReceipttoInv(id: ID, image: string): Promise<IDBResponse>;
+    addReceipttoInv(transid: ID, image: string): Promise<IDBResponse>;
     addWallet(walletData: IWallet): Promise<IDBResponse>;
     authenticate(options: IAuthOptions): Promise<[IUser, string]>;
-    createInvestment(investmentDetails: IInvestmentReq): Promise<IInvestment>;
-    createUser(userDetails: IUser): Promise<IUser>;
+    confirmTransaction(transId: ID): Promise<IDBResponse>;
+    confirmWithdrawal(transId: ID): Promise<IDBResponse>;
+    createInvestment(investmentDetails: IInvestmentReq): Promise<[IInvestment, ITransaction]>;
+    createUser(userDetails: IUser, origin: string): Promise<IUser>;
     deleteUser(userId: ID): Promise<IDBResponse>;
     deleteWallet(walletId: ID): Promise<IDBResponse>;
     findDashboard(userId: string): Promise<IDashboard | null>;
@@ -27,12 +42,17 @@ export interface IMongoService {
     getAllUsers(): Promise<IUser[]>;
     getAllWallets(): Promise<IWallet[]>;
     getDashboard(userId: string): Promise<IDashboard>;
+    getTransactionHistory(userId: ID): Promise<ITransaction[]>;
+    getWithdrawalData(userId: ID): Promise<ITransaction | null>;
+    redeemReferral(userId: ID): Promise<IDBResponse>;
+    requestwithdraw(transDetails: TransDetails): Promise<IDBResponse>;
+    terminateInvestment(invId: ID): Promise<IDBResponse>;
     updateAvatar(userId: ID, avatar: string): Promise<IDBResponse>;
     updatePassword(userId: ID, password: string): Promise<void>;
     updateWallet(userId: ID, walletId: ID, type: string): Promise<IDBResponse>;
-    verifyDeposit(investmentId: ID): Promise<IDBResponse>;
+    updateProfit(invId: ID, amount: number): Promise<IDBResponse>;
+    verifyDeposit(invId: ID): Promise<IDBResponse | { firstName: string, email: string, inv: IInvestment }>;
     verifyUser(userId: ID): Promise<IDBResponse>;
-    //confirmWithdrawal
 }
 
 export class MongoService implements IMongoService {
@@ -68,12 +88,12 @@ export class MongoService implements IMongoService {
         return
     }
 
-    async addReceipttoInv(id: ID, image: string) {
-        const investment = await Investment.findByIdAndUpdate(id, {
+    async addReceipttoInv(transId: ID, image: string) {
+        const transaction = await Transaction.findByIdAndUpdate(transId, {
             receipt: image
         }).exec()
 
-        if (!investment) return { statusCode: 500, message: 'An error occured. Try again' }
+        if (!transaction) return { statusCode: 500, message: 'Transaction not found' }
         return { statusCode: 200, message: 'Deposit made' }
     }
 
@@ -101,29 +121,81 @@ export class MongoService implements IMongoService {
         return [user, pwd]
     }
 
-    async createInvestment(investmentDetails: IInvestmentReq) {
+    async confirmTransaction(transId: ID) {
+        const trans = await Transaction.findById(transId).exec()
+        if (!trans) return { statusCode: 400, message: 'Transaction not found' }
+        trans.completed = true
+        await trans.save()
+
+        return { statusCode: 200, message: 'Transaction confirmed' }
+    }
+
+    async confirmWithdrawal(transId: ID) {
+        const trans = await Transaction.findById(transId).exec()
+        if (!trans) return { statusCode: 400, message: 'Request not found' }
+
+        const dash = await this.findDashboard(trans.investor)
+        if (!dash) return { statusCode: 500, message: 'Dashboard not found' }
+
+        try {
+            trans.completed = true
+            await trans.save()
+
+            dash.hasInvestment = false
+            dash.investment = undefined
+            // Find index of "Withdrawal" issue and remove it
+            const idx = dash.issues.indexOf('Withdrawal')
+            if (idx !== -1) {
+                dash.issues = dash.issues.slice(0, idx).concat(dash.issues.slice(idx + 1))
+            }
+            await dash.save()
+        } catch ({ message }) {
+            return { statusCode: 500, message: <string>message }
+        }
+
+        return { statusCode: 200, message: 'Transaction confirmed' }
+    }
+
+    async createInvestment(investmentDetails: IInvestmentReq): Promise<[IInvestment, ITransaction]> {
         const dashB = await this.findDashboard(investmentDetails.investor)
         if (!dashB) {
             throw new Error('Dashboard not found')
         }
 
-        const inv = new Investment(investmentDetails)
+        const trans = new Transaction({
+            investor: investmentDetails.investor,
+            amount: investmentDetails.investmentAmount,
+            method: investmentDetails.method,
+            receipt: investmentDetails.receipt,
+            type: 'DEPOSIT',
+        })
+        await trans.save()
+
+        const inv = new Investment({
+            investor: investmentDetails.investor,
+            transaction: trans._id,
+            investmentPlan: investmentDetails.investmentPlan,
+            investmentPackage: investmentDetails.investmentPackage,
+            investmentAmount: investmentDetails.investmentAmount,
+        })
         await inv.save()
 
+        dashB.investment = inv._id
         dashB.hasInvestment = true
         await dashB.save()
+        inv.ROI = packageConverter[investmentDetails.investmentPackage]
 
-        return inv
+        return [inv, trans]
     }
 
-    async createUser(userDetails: IUser) {
+    async createUser(userDetails: IUser, origin: string) {
         const user = new User<IUser>(userDetails)
         await user.save()
 
         const dashboard = new Dashboard({
             owner: user._id,
         })
-        dashboard.referralLink = `${process.env.BASE_URL}/signup/${dashboard._id}`,
+        dashboard.referralLink = `${origin}/signup/${dashboard._id}`,
             await dashboard.save()
 
         return user
@@ -177,6 +249,11 @@ export class MongoService implements IMongoService {
             await dashboard.populate('owner btc eth usdt')
             if (dashboard.hasInvestment) {
                 await dashboard.populate('investment')
+                if (dashboard.investment) {
+                    dashboard.investment = dashboard.investment as IInvestment
+                    const trans = await Transaction.findById(dashboard.investment.transaction)
+                    dashboard.investment!.transaction = trans ? trans : dashboard.investment.transaction
+                }
             }
             return dashboard
         }))
@@ -196,8 +273,88 @@ export class MongoService implements IMongoService {
         await dashboard.populate('owner btc eth usdt')
         if (dashboard.hasInvestment) {
             await dashboard.populate('investment')
+            if (dashboard.investment) {
+                dashboard.investment = dashboard.investment as IInvestment
+                const trans = await Transaction.findById(dashboard.investment.transaction)
+                dashboard.investment.transaction = trans ? trans : dashboard.investment.transaction
+            }
         }
         return dashboard
+    }
+
+    async getTransactionHistory(userId: ID) {
+        const transactions = await Transaction.find({ investor: userId }).exec()
+        return transactions
+    }
+
+    async getWithdrawalData(userId: ID) {
+        const transaction = await Transaction.findOne({
+            investor: userId,
+            type: 'WITHDRAWAL',
+            completed: false
+        }).exec()
+        return transaction
+    }
+
+    async redeemReferral(userId: ID) {
+        const dashboard = await this.findDashboard(userId)
+        if (!dashboard) return { statusCode: 400, message: 'Dashboard was not found' }
+
+        try {
+            dashboard.withdrawable_fund += dashboard.referralBonus
+            dashboard.referralBonus = 0
+            await dashboard.save()
+        } catch ({ message }) {
+            return { statusCode: 500, message: <string>message }
+        }
+
+        return { statusCode: 200, message: 'Referral bonus redeemed seccessfully' }
+    }
+
+    async requestwithdraw(transDetails: TransDetails) {
+        const dashboard = await this.findDashboard(transDetails.investor)
+        if (!dashboard) return { statusCode: 400, message: 'Dashboard was not found' }
+
+        try {
+            const trans = new Transaction({
+                investor: transDetails.investor,
+                method: transDetails.method,
+                amount: transDetails.amount,
+                walletAddress: transDetails.walletAddress,
+                receipt: 'TBC',
+                type: 'WITHDRAWAL',
+                completed: false
+            })
+            await trans.save()
+
+            dashboard.issues.push('Withdrawal')
+            dashboard.withdrawable_fund = 0
+            await dashboard.save()
+        } catch ({ message }) {
+            return { statusCode: 500, message: <string>message }
+        }
+
+        return { statusCode: 200, message: 'Withdrawal requested seccessfully' }
+    }
+
+    async terminateInvestment(invId: ID) {
+        const inv = await Investment.findById(invId)
+        if (!inv) return { statusCode: 400, message: 'Investment was not found' }
+
+        const dashboard = await this.findDashboard(inv.investor as ID)
+        if (!dashboard) return { statusCode: 400, message: 'Dashboard was not found' }
+
+        try {
+            inv.status = STATUS.COMPLETED
+            await inv.save()
+
+            dashboard.withdrawable_fund = inv.investmentAmount + inv.ROI
+            await dashboard.save()
+        } catch ({ message }) {
+            return { statusCode: 500, message: <string>message }
+        }
+
+        return { statusCode: 200, message: 'Investment has been closed' }
     }
 
     async updateAvatar(userId: ID, avatar: string) {
@@ -223,16 +380,27 @@ export class MongoService implements IMongoService {
         return { statusCode: 200, message: 'Wallet updated' }
     }
 
-    async verifyDeposit(investmentId: ID) {
-        const inv = await Investment.findById(investmentId).exec()
-        if (!inv) return { statusCode: 500, message: 'An error occured. Try again' }
+    async updateProfit(invId: ID, amount: number) {
+        const inv = await Investment.findByIdAndUpdate(invId, { ROI: amount }).exec()
+        if (!inv) return { statusCode: 500, message: 'Investment not found' }
 
+        return { statusCode: 200, message: 'Profit updated' }
+    }
+
+    async verifyDeposit(invId: ID) {
+        const inv = await Investment.findById(invId).exec()
+        if (!inv) return { statusCode: 400, message: 'Investment not found' }
         inv.status = STATUS.ACTIVE
         await inv.save()
+        await inv.populate('transaction')
+        inv.ROI = packageConverter[inv.investmentPackage]
 
-        const { email } = <IUser>await this.findUserById(inv.investor)
+        const { statusCode, message } = await this.confirmTransaction(<ID>inv.transaction)
+        if (statusCode !== 200) return { statusCode, message }
 
-        return { statusCode: 200, message: email }
+        const { email, firstName } = <IUser>await this.findUserById(<ID>inv.investor)
+
+        return { inv, email, firstName }
     }
 
     async verifyUser(userId: ID) {

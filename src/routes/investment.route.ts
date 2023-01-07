@@ -8,19 +8,23 @@ import verifyJWT from "../middleware/verifyJWT"
 import Cloudinary from "../services/cloudinary.service"
 import MailService from "../services/mail.service"
 
-const { SMTP_SERVICE, SMTP_AUTH_USER, SMTP_AUTH_PASS } = process.env
+const { SMTP_SERVICE, SMTP_AUTH_USER, SMTP_AUTH_PASS, SMTP_PORT } = process.env
 
 const investmentController: IInvestmentController = new InvestmentController(
     new MongoService(),
     new Cloudinary(),
-    new MailService(SMTP_SERVICE!, SMTP_AUTH_USER!, SMTP_AUTH_PASS!))
+    new MailService(SMTP_SERVICE!, SMTP_AUTH_USER!, SMTP_AUTH_PASS!, +SMTP_PORT!))
 
 investmentRoute.use(verifyJWT)
 
 investmentRoute.post('/deposit', imageUpload.single('receipt'), investmentController.makeInvestment)
 investmentRoute.patch('/verify-deposit', investmentController.verifyDeposit)
-// investmentRoute.post('/request-withdrawal', investmentController.withdraw)
-// investmentRoute.post('/confirm-withdrawal', investmentController.confirmWithdrawal)
-// investmentRoute.post('/transaction-history', investmentController.getTransxHistory)
+investmentRoute.patch('/update-profit', investmentController.updateProfit)
+investmentRoute.get('/transaction-history/:userId', investmentController.getTransactionHistory)
+investmentRoute.patch('/terminate-investment', investmentController.terminateInvestment)
+investmentRoute.patch('/redeem-referral', investmentController.redeemReferral)
+investmentRoute.post('/request-withdrawal', investmentController.requestwithdraw)
+investmentRoute.get('/withdrawal/:userId', investmentController.getWithdrawalData)
+investmentRoute.patch('/confirm-withdrawal', investmentController.confirmWithdrawal)
 
 export default investmentRoute

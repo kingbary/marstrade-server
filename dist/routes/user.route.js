@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const userRoute = express_1.default.Router();
+const db_service_1 = require("../services/db.service");
+const user_controller_1 = require("../controller/user.controller");
+const verifyJWT_1 = __importDefault(require("../middleware/verifyJWT"));
+const cloudinary_service_1 = __importDefault(require("../services/cloudinary.service"));
+const imageUpload_middleware_1 = require("../middleware/imageUpload.middleware");
+const userController = new user_controller_1.UserController(new db_service_1.MongoService(), new cloudinary_service_1.default());
+userRoute.use(verifyJWT_1.default);
+userRoute.get('/get-all', userController.getAllUsers);
+userRoute.delete('/:userId', userController.deleteUser);
+userRoute.put('/:userId', imageUpload_middleware_1.imageUpload.single('avatar'), userController.updateAvatar);
+userRoute.post('/kyc/:userId', imageUpload_middleware_1.imageUpload.array('ID', 2), userController.addKYC);
+userRoute.patch('/verify/:userId', userController.verifyUser);
+exports.default = userRoute;

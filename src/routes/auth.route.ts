@@ -9,13 +9,13 @@ import loginLimiter from '../middleware/loginLimiter'
 import JWTService from '../services/JWT.service'
 import MailService from '../services/mail.service'
 
-const { SMTP_SERVICE, SMTP_AUTH_USER, SMTP_AUTH_PASS } = process.env
+const { SMTP_SERVICE, SMTP_AUTH_USER, SMTP_AUTH_PASS, SMTP_PORT } = process.env
 
 const auth: IAuth = new Auth(
     new MongoService(),
     new Encryption(),
     new JWTService(),
-    new MailService(SMTP_SERVICE!, SMTP_AUTH_USER!, SMTP_AUTH_PASS!))
+    new MailService(SMTP_SERVICE!, SMTP_AUTH_USER!, SMTP_AUTH_PASS!, +SMTP_PORT!))
 
 router.post('/login', loginLimiter, loginValidator, auth.login)
 router.post('/signup', signupValidator, auth.signup)

@@ -19,7 +19,7 @@ export const app = express()
 app.use(express.json())
 
 // built-in middleware for serving static files (CSS).
-app.use('/', express.static(path.join(__dirname,'..', 'public')))
+app.use('/', express.static(path.join(__dirname, '..', 'public')))
 
 // 3rd party middleware for handling cors.
 app.use(cors(corsOptions))
@@ -28,13 +28,19 @@ app.use(cors(corsOptions))
 app.use(cookieParser())
 
 // Route handlers
-app.use('/', rootRoute) // home route
+// app.use('/', rootRoute) // home route
 app.use('/v1/auth', authRoute) // home route
-
 app.use('/v1/dashboard', dashboardRoute) // get dashboard
 app.use('/v1/investment', investmentRoute) // transactions (make investment, make withrawal, get history)
 app.use('/v1/user', userRoute) // account profile ( see users, delete user, update profile, update avatar, change password)
 app.use('/v1/wallet', walletRoute) // add wallet, remove wallet
+
+// SERVE REACT BUILD AS A STATIC FILE.
+app.use(express.static(path.join(__dirname, '..', 'build')))
+
+app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'build', 'index.html'));
+});
 
 app.all('*', (req, res) => { // send 404
     res.status(404)

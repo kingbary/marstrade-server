@@ -1,8 +1,42 @@
 import { Types } from "mongoose"
 
+/**
+ * TYPES
+ */
 export type ID = Types.ObjectId | string
 export type WALLET = 'btc' | 'eth' | 'usdt'
+export type invPackageType = 'AGRICULTURE' | 'FOREX' | 'REAL_ESTATE' | 'INHERITANCE' | 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'
+export type BASIC = 'AGRICULTURE' | 'FOREX'
+export type PREMIUM = 'REAL_ESTATE' | 'INHERITANCE'
+export type VIP = 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'
 
+export type TransDetails = {
+    investor: ID;
+    method: string;
+    amount: number;
+    walletAddress: string;
+}
+
+
+/**
+ * ENUMS
+ */
+export enum PLANS {
+    BASIC = 'BASIC',
+    PREMIUM = 'PREMIUM',
+    VIP = 'VIP'
+}
+
+export enum STATUS {
+    PENDING = 'PENDING',
+    ACTIVE = 'ACTIVE',
+    COMPLETED = 'COMPLETED',
+}
+
+
+/**
+ * INTERFACES
+ */
 export interface IUser {
     firstName: string;
     lastName: string;
@@ -34,17 +68,31 @@ export interface IDashboard {
     owner: ID;
     referralLink: string;
     referrals: number;
+    referralBonus: number;
     hasInvestment: boolean;
     avatar?: string;
-    investment?: {
-        investmentPlan: string;
-        investmentPackage: string;
-        investmentAmount: number;
-        ROI: number;
-    };
-    btc: ID
-    eth: ID
-    usdt: ID
+    investment?: ID | IInvestment;
+    withdrawable_fund: number;
+    issues: string[];
+    // investment?: {
+    //     investmentPlan: string;
+    //     investmentPackage: string;
+    //     investmentAmount: number;
+    //     ROI: number;
+    // };
+    btc: ID;
+    eth: ID;
+    usdt: ID;
+}
+
+export interface IMailData {
+    email: string,
+    firstName: string,
+    amount: string,
+    method: string,
+    invPlan: string,
+    invPackage: string,
+    ROI: string,
 }
 
 export interface IInvestmentReq {
@@ -52,20 +100,32 @@ export interface IInvestmentReq {
     investmentPlan: PLANS;
     investmentPackage: string;
     investmentAmount: number;
+    method: string;
     receipt: string;
 }
 
 export interface IInvestment {
     id?: string;
-    investor: ID;
+    investor: ID | IUser;
+    transaction: ID | ITransaction;
     investmentPlan: PLANS;
     investmentPackage: string;
     investmentAmount: number;
-    receipt: string;
-    status: STATUS,
+    status: STATUS;
     isActive: boolean;
     ROI: number;
     createdAt: Date;
+}
+
+export interface ITransaction {
+    id?: string;
+    investor: ID;
+    amount: number;
+    type: 'DEPOSIT' | 'WITHDRAWAL';
+    walletAddress: string;
+    receipt: string;
+    method: string;
+    completed: boolean;
 }
 
 export interface IDBResponse {
@@ -81,27 +141,9 @@ export interface IKYCData {
     IDBack: string;
 }
 
-
 export interface IServiceResponse {
     isSuccess: boolean,
     message: string,
     statusCode: number,
     imageURL?: string,
 }
-
-export enum PLANS {
-    BASIC = 'BASIC',
-    PREMIUM = 'PREMIUM',
-    VIP = 'VIP'
-}
-
-export enum STATUS {
-    PENDING = 'PENDING',
-    ACTIVE = 'ACTIVE',
-    COMPLETED = 'COMPLETED',
-}
-
-export type invPackageType = 'AGRICULTURE' | 'FOREX' | 'REAL_ESTATE' | 'INHERITANCE' | 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'
-export type BASIC = 'AGRICULTURE' | 'FOREX'
-export type PREMIUM = 'REAL_ESTATE' | 'INHERITANCE'
-export type VIP = 'ENERGY' | 'CRYPTOCURRENCY' | 'METAL'

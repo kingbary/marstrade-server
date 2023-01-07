@@ -55,7 +55,6 @@ export class WalletController implements IWalletController {
     updateForUser = asyncHandler(async (req, res) => {
         const { userId, walletId, type } = req.body
         const { message, statusCode } = await this.persistence.updateWallet(userId, walletId, type)
-        console.log(message, statusCode)
         res.status(statusCode).json({ message })
     })
 }

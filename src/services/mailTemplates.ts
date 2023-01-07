@@ -6,25 +6,25 @@ export const depositConfirmedTemplate = `
             <div class="card-heading mb-3">
                 <h3 class="card-title">Deposit Confirmation</h3>
             </div>
-            <h5>Dear User,</h5>
+            <h5>Hi <<USER>>,</h5>
             <div>
                 <p>Your deposit has successfully been completed. Below are the details of your Investment:</p>
                 <div class="card border-left">
                     <div class="card-body">
                         <div class="row">
-                            Investment Amount: $3900
+                            Investment Amount: $<<AMOUNT>>
                         </div>
                         <div class="row">
-                            Payment Method: BTC
+                            Payment Method: <<METHOD>>
                         </div>
                         <div class="row">
-                            Investment Plan: Basic
+                            Investment Plan: <<PLAN>>
                         </div>
                         <div class="row">
-                            Investment Type: Forex
+                            Investment Type: <<PACKAGE>>
                         </div>
                         <div class="row">
-                            ROI: 2.5% daily
+                            ROI: <<ROI>>% daily
                         </div>
                         <div class="row">
                             Duration: 7 days
@@ -37,7 +37,6 @@ export const depositConfirmedTemplate = `
         </div>
     </div>
 </body>
-
 </html>`
 
 export const depositNotifyTemplate = `
@@ -48,25 +47,25 @@ export const depositNotifyTemplate = `
             <div class="card-heading mb-3">
                 <h3 class="card-title">Deposit Notification</h3>
             </div>
-            <h5>Dear ADMIN,</h5>
+            <h5>Dear <<USER>>,</h5>
             <div>
                 <p>A user just made a deposit. Detail of their investment plan is shown below:</p>
                 <div class="card border-left">
                     <div class="card-body">
                         <div class="row">
-                            Investment Amount: $3900
+                            Investment Amount: $<<AMOUNT>>
                         </div>
                         <div class="row">
-                            Payment Method: BTC
+                            Payment Method: <<METHOD>>
                         </div>
                         <div class="row">
-                            Investment Plan: Basic
+                            Investment Plan: <<PLAN>>
                         </div>
                         <div class="row">
-                            Investment Type: Forex
+                            Investment Type: <<PACKAGE>>
                         </div>
                         <div class="row">
-                            ROI: 2.5% daily
+                            ROI: <<ROI>>% daily
                         </div>
                         <div class="row">
                             Duration: 7 days

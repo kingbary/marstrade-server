@@ -1,0 +1,26 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const investmentRoute = express_1.default.Router();
+const db_service_1 = require("../services/db.service");
+const investment_controller_1 = require("../controller/investment.controller");
+const imageUpload_middleware_1 = require("../middleware/imageUpload.middleware");
+const verifyJWT_1 = __importDefault(require("../middleware/verifyJWT"));
+const cloudinary_service_1 = __importDefault(require("../services/cloudinary.service"));
+const mail_service_1 = __importDefault(require("../services/mail.service"));
+const { SMTP_SERVICE, SMTP_AUTH_USER, SMTP_AUTH_PASS, SMTP_PORT } = process.env;
+const investmentController = new investment_controller_1.InvestmentController(new db_service_1.MongoService(), new cloudinary_service_1.default(), new mail_service_1.default(SMTP_SERVICE, SMTP_AUTH_USER, SMTP_AUTH_PASS, +SMTP_PORT));
+investmentRoute.use(verifyJWT_1.default);
+investmentRoute.post('/deposit', imageUpload_middleware_1.imageUpload.single('receipt'), investmentController.makeInvestment);
+investmentRoute.patch('/verify-deposit', investmentController.verifyDeposit);
+investmentRoute.patch('/update-profit', investmentController.updateProfit);
+investmentRoute.get('/transaction-history/:userId', investmentController.getTransactionHistory);
+investmentRoute.patch('/terminate-investment', investmentController.terminateInvestment);
+investmentRoute.patch('/redeem-referral', investmentController.redeemReferral);
+investmentRoute.post('/request-withdrawal', investmentController.requestwithdraw);
+investmentRoute.get('/withdrawal/:userId', investmentController.getWithdrawalData);
+investmentRoute.patch('/confirm-withdrawal', investmentController.confirmWithdrawal);
+exports.default = investmentRoute;

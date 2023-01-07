@@ -1,0 +1,23 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const router = express_1.default.Router();
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const auth_controller_1 = require("../controller/auth.controller");
+const db_service_1 = require("../services/db.service");
+const encryption_service_1 = require("../services/encryption.service");
+const loginLimiter_1 = __importDefault(require("../middleware/loginLimiter"));
+const JWT_service_1 = __importDefault(require("../services/JWT.service"));
+const mail_service_1 = __importDefault(require("../services/mail.service"));
+const { SMTP_SERVICE, SMTP_AUTH_USER, SMTP_AUTH_PASS, SMTP_PORT } = process.env;
+const auth = new auth_controller_1.Auth(new db_service_1.MongoService(), new encryption_service_1.Encryption(), new JWT_service_1.default(), new mail_service_1.default(SMTP_SERVICE, SMTP_AUTH_USER, SMTP_AUTH_PASS, +SMTP_PORT));
+router.post('/login', loginLimiter_1.default, auth_middleware_1.loginValidator, auth.login);
+router.post('/signup', auth_middleware_1.signupValidator, auth.signup);
+router.post('/logout', auth.logout);
+router.get('/refresh', auth.refresh);
+router.post('/reset-password', auth.resetPassword);
+router.post('/get-reset-url', auth.sendResetPassURL);
+exports.default = router;

@@ -1,34 +1,42 @@
 import nodemailer from 'nodemailer'
 import SMTPTransport from 'nodemailer/lib/smtp-transport'
-import { IServiceResponse, IUser } from '../models/types'
-import { depositConfirmedTemplate, depositNotifyTemplate } from './mailTemplates';
+import { IMailData, IServiceResponse, IUser } from '../models/types'
+import { depositConfirmedTemplate, depositNotifyTemplate } from './mailTemplates'
 
 export interface IMailService {
     sendMail: (to: string, subject: string, html: string) => Promise<SMTPTransport.SentMessageInfo>;
     sendWelcomeMail: (user: IUser) => Promise<IServiceResponse>;
     sendPasswordResetMail: (email: string, url: string) => Promise<SMTPTransport.SentMessageInfo>;
-    sendDepositConfirmMail: (email: string) => Promise<SMTPTransport.SentMessageInfo>;
-    sendDepositNotifyMail: (email: string) => Promise<SMTPTransport.SentMessageInfo>;
+    sendDepositConfirmMail: (payload: IMailData) => Promise<SMTPTransport.SentMessageInfo>;
+    sendDepositNotifyMail: (payload: IMailData) => Promise<SMTPTransport.SentMessageInfo>;
 }
 
 class MailService implements IMailService {
-    private service
     private authUser
-    private authPassword
     private transporter
 
-    constructor(service: string, authUser: string, authPassword: string) {
-        this.service = service
+    constructor(service: string, authUser: string, authPassword: string, SMTP_PORT: number) {
         this.authUser = authUser
-        this.authPassword = authPassword
 
+        // Using gmail transport
         this.transporter = nodemailer.createTransport({
-            service: this.service,
+            service: service,
             auth: {
-                user: this.authUser,
-                pass: this.authPassword,
+                user: authUser,
+                pass: authPassword,
             },
         } as SMTPTransport.Options)
+        
+        // Using cpanel transport
+        // this.transporter = nodemailer.createTransport({
+        //     host: service,
+        //     port: SMTP_PORT,
+        //     secure: true, // true for 465, false for other ports
+        //     auth: {
+        //       user: authUser, // generated ethereal user
+        //       pass: authPassword, // generated ethereal password
+        //     }
+        //   })
     }
 
     sendMail = async (to: string, subject: string, html: string) => {
@@ -59,7 +67,7 @@ class MailService implements IMailService {
                 </body>
             </html>`
         try {
-            const sendMail = await this.sendMail(to, "WELCOME TO MARSTRADE", verificationMail)
+            const sendMail = await this.sendMail(to, "WELCOME TO Marstrade", verificationMail)
             process.env.NODE_ENV === 'development' && console.log(sendMail)
             return {
                 isSuccess: true,
@@ -100,20 +108,34 @@ class MailService implements IMailService {
         }
     }
 
-    sendDepositConfirmMail = async (email: string) => {
-        const to = email
+    sendDepositConfirmMail = async (payload: IMailData) => {
+        const to = payload.email
         try {
-            const sendMail = await this.sendMail(to, "DEPOSIT CONFIRMATION", depositConfirmedTemplate)
+            const depositConfirmMail = depositConfirmedTemplate
+                .replace(/<<USER>>/gi, payload.firstName)
+                .replace(/<<AMOUNT>>/gi, payload.amount)
+                .replace(/<<METHOD>>/gi, payload.method)
+                .replace(/<<PLAN>>/gi, payload.invPlan)
+                .replace(/<<PACKAGE>>/gi, payload.invPackage)
+                .replace(/<<ROI>>/gi, payload.ROI)
+            const sendMail = await this.sendMail(to, "DEPOSIT CONFIRMATION", depositConfirmMail)
             return sendMail
         } catch (error) {
             throw new Error("Mail not sent")
         }
     }
 
-    sendDepositNotifyMail = async (email: string) => {
-        const to = email
+    sendDepositNotifyMail = async (payload: IMailData) => {
+        const to = payload.email
         try {
-            const sendMail = await this.sendMail(to, "NOTIFICATION OF DEPOSIT", depositNotifyTemplate)
+            const depositNotifyMail = depositNotifyTemplate
+                .replace(/<<USER>>/gi, payload.firstName)
+                .replace(/<<AMOUNT>>/gi, payload.amount)
+                .replace(/<<METHOD>>/gi, payload.method)
+                .replace(/<<PLAN>>/gi, payload.invPlan)
+                .replace(/<<PACKAGE>>/gi, payload.invPackage)
+                .replace(/<<ROI>>/gi, payload.ROI)
+            const sendMail = await this.sendMail(to, "NOTIFICATION OF DEPOSIT", depositNotifyMail)
             return sendMail
         } catch (error) {
             throw new Error("Mail not sent")
