@@ -19,7 +19,6 @@ investmentRoute.use(verifyJWT)
 
 investmentRoute.post('/deposit', imageUpload.single('receipt'), investmentController.makeInvestment)
 investmentRoute.patch('/verify-deposit', investmentController.verifyDeposit)
-investmentRoute.patch('/update-profit', investmentController.updateProfit)
 investmentRoute.get('/transaction-history/:userId', investmentController.getTransactionHistory)
 investmentRoute.patch('/terminate-investment', investmentController.terminateInvestment)
 investmentRoute.patch('/redeem-referral', investmentController.redeemReferral)

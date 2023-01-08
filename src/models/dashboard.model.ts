@@ -4,6 +4,7 @@ import { IDashboard } from "./types";
 const dashboardSchema = new Schema<IDashboard>(
     {
         owner: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+        avatar: { type: String },
         referralLink: { type: String, required: true },
         hasInvestment: { type: Boolean, default: false },
         referrals: { type: Number, default: 0 },

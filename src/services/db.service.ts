@@ -10,18 +10,6 @@ interface IAuthOptions {
     userId?: ID;
 }
 
-
-export const packageConverter: { [key: string]: number } = {
-    'AGRICULTURE': 5,
-    'FOREX': 2.5,
-    'STOCK': 2.5,
-    'INHERITANCE': 7.5,
-    'ENERGY': 7.5,
-    'CRYPTOCURRENCY': 2.5,
-    'METAL': 7.5,
-    'REAL_ESTATE': 5
-}
-
 export interface IMongoService {
     addKYC(userId: ID, KYCData: IKYCData): Promise<boolean>;
     addReferral(id: string): Promise<void>;
@@ -50,7 +38,7 @@ export interface IMongoService {
     updateAvatar(userId: ID, avatar: string): Promise<IDBResponse>;
     updatePassword(userId: ID, password: string): Promise<void>;
     updateWallet(userId: ID, walletId: ID, type: string): Promise<IDBResponse>;
-    updateProfit(invId: ID, amount: number): Promise<IDBResponse>;
+    // updateProfit(invId: ID, amount: number): Promise<IDBResponse>;
     verifyDeposit(invId: ID): Promise<IDBResponse | { firstName: string, email: string, inv: IInvestment }>;
     verifyUser(userId: ID): Promise<IDBResponse>;
 }
@@ -183,7 +171,6 @@ export class MongoService implements IMongoService {
         dashB.investment = inv._id
         dashB.hasInvestment = true
         await dashB.save()
-        inv.ROI = packageConverter[investmentDetails.investmentPackage]
 
         return [inv, trans]
     }
@@ -380,20 +367,12 @@ export class MongoService implements IMongoService {
         return { statusCode: 200, message: 'Wallet updated' }
     }
 
-    async updateProfit(invId: ID, amount: number) {
-        const inv = await Investment.findByIdAndUpdate(invId, { ROI: amount }).exec()
-        if (!inv) return { statusCode: 500, message: 'Investment not found' }
-
-        return { statusCode: 200, message: 'Profit updated' }
-    }
-
     async verifyDeposit(invId: ID) {
         const inv = await Investment.findById(invId).exec()
         if (!inv) return { statusCode: 400, message: 'Investment not found' }
         inv.status = STATUS.ACTIVE
         await inv.save()
         await inv.populate('transaction')
-        inv.ROI = packageConverter[inv.investmentPackage]
 
         const { statusCode, message } = await this.confirmTransaction(<ID>inv.transaction)
         if (statusCode !== 200) return { statusCode, message }

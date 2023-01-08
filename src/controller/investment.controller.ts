@@ -13,7 +13,6 @@ export interface IInvestmentController {
     redeemReferral: e.RequestHandler;
     requestwithdraw: e.RequestHandler;
     terminateInvestment: e.RequestHandler;
-    updateProfit: e.RequestHandler;
     verifyDeposit: e.RequestHandler;
 }
 
@@ -142,13 +141,5 @@ export class InvestmentController implements IInvestmentController {
         }
 
         res.status(response.statusCode).json({ message: response.message })
-    })
-
-    updateProfit = asyncHandler(async (req, res) => {
-        const invId: ID = req.body.invId
-        const amount: number = req.body.amount
-        const { statusCode, message } = await this.persistence.updateProfit(invId, amount)
-
-        res.status(statusCode).json({ message })
     })
 }
