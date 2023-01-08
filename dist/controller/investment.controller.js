@@ -111,12 +111,6 @@ class InvestmentController {
             }
             res.status(response.statusCode).json({ message: response.message });
         }));
-        this.updateProfit = (0, express_async_handler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
-            const invId = req.body.invId;
-            const amount = req.body.amount;
-            const { statusCode, message } = yield this.persistence.updateProfit(invId, amount);
-            res.status(statusCode).json({ message });
-        }));
         this.persistence = persistence;
         this.objService = objService;
         this.mailService = mailService;

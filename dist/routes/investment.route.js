@@ -16,7 +16,6 @@ const investmentController = new investment_controller_1.InvestmentController(ne
 investmentRoute.use(verifyJWT_1.default);
 investmentRoute.post('/deposit', imageUpload_middleware_1.imageUpload.single('receipt'), investmentController.makeInvestment);
 investmentRoute.patch('/verify-deposit', investmentController.verifyDeposit);
-investmentRoute.patch('/update-profit', investmentController.updateProfit);
 investmentRoute.get('/transaction-history/:userId', investmentController.getTransactionHistory);
 investmentRoute.patch('/terminate-investment', investmentController.terminateInvestment);
 investmentRoute.patch('/redeem-referral', investmentController.redeemReferral);

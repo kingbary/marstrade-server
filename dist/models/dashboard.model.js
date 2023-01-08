@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const dashboardSchema = new mongoose_1.Schema({
     owner: { type: mongoose_1.Schema.Types.ObjectId, required: true, ref: 'User' },
+    avatar: { type: String },
     referralLink: { type: String, required: true },
     hasInvestment: { type: Boolean, default: false },
     referrals: { type: Number, default: 0 },

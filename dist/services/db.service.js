@@ -12,23 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MongoService = exports.packageConverter = void 0;
+exports.MongoService = void 0;
 const dashboard_model_1 = __importDefault(require("../models/dashboard.model"));
 const investment_model_1 = __importDefault(require("../models/investment.model"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const types_1 = require("../models/types");
 const wallet_model_1 = __importDefault(require("../models/wallet.model"));
 const transaction_model_1 = __importDefault(require("../models/transaction.model"));
-exports.packageConverter = {
-    'AGRICULTURE': 5,
-    'FOREX': 2.5,
-    'STOCK': 2.5,
-    'INHERITANCE': 7.5,
-    'ENERGY': 7.5,
-    'CRYPTOCURRENCY': 2.5,
-    'METAL': 7.5,
-    'REAL_ESTATE': 5
-};
 class MongoService {
     addKYC(userId, KYCData) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -159,7 +149,6 @@ class MongoService {
             dashB.investment = inv._id;
             dashB.hasInvestment = true;
             yield dashB.save();
-            inv.ROI = exports.packageConverter[investmentDetails.investmentPackage];
             return [inv, trans];
         });
     }
@@ -369,14 +358,6 @@ class MongoService {
             return { statusCode: 200, message: 'Wallet updated' };
         });
     }
-    updateProfit(invId, amount) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const inv = yield investment_model_1.default.findByIdAndUpdate(invId, { ROI: amount }).exec();
-            if (!inv)
-                return { statusCode: 500, message: 'Investment not found' };
-            return { statusCode: 200, message: 'Profit updated' };
-        });
-    }
     verifyDeposit(invId) {
         return __awaiter(this, void 0, void 0, function* () {
             const inv = yield investment_model_1.default.findById(invId).exec();
@@ -385,7 +366,6 @@ class MongoService {
             inv.status = types_1.STATUS.ACTIVE;
             yield inv.save();
             yield inv.populate('transaction');
-            inv.ROI = exports.packageConverter[inv.investmentPackage];
             const { statusCode, message } = yield this.confirmTransaction(inv.transaction);
             if (statusCode !== 200)
                 return { statusCode, message };
