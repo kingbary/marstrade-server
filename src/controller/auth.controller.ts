@@ -72,11 +72,11 @@ export class Auth implements IAuth {
         const newUser = await this.persistence.createUser(userData, origin)
 
         const mailResponse = await this.mailService.sendWelcomeMail(newUser)
-        if (!mailResponse.isSuccess) {
-            const deleteResponse = await this.persistence.deleteUser(newUser.id!)
-            res.status(mailResponse.statusCode).json({ message: mailResponse.message })
-            return
-        }
+        // if (!mailResponse.isSuccess) {
+        //     const deleteResponse = await this.persistence.deleteUser(newUser.id!)
+        //     res.status(mailResponse.statusCode).json({ message: mailResponse.message })
+        //     return
+        // }
 
         if (referrer) await this.persistence.addReferral(req.params.referrer)
 

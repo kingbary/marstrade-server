@@ -51,11 +51,11 @@ class Auth {
             const origin = req.get('origin');
             const newUser = yield this.persistence.createUser(userData, origin);
             const mailResponse = yield this.mailService.sendWelcomeMail(newUser);
-            if (!mailResponse.isSuccess) {
-                const deleteResponse = yield this.persistence.deleteUser(newUser.id);
-                res.status(mailResponse.statusCode).json({ message: mailResponse.message });
-                return;
-            }
+            // if (!mailResponse.isSuccess) {
+            //     const deleteResponse = await this.persistence.deleteUser(newUser.id!)
+            //     res.status(mailResponse.statusCode).json({ message: mailResponse.message })
+            //     return
+            // }
             if (referrer)
                 yield this.persistence.addReferral(req.params.referrer);
             if (newUser) { // created successfully
