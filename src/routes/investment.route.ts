@@ -22,7 +22,7 @@ investmentRoute.patch('/verify-deposit', investmentController.verifyDeposit)
 investmentRoute.get('/transaction-history/:userId', investmentController.getTransactionHistory)
 investmentRoute.patch('/terminate-investment', investmentController.terminateInvestment)
 investmentRoute.patch('/redeem-referral', investmentController.redeemReferral)
-investmentRoute.post('/request-withdrawal', investmentController.requestwithdraw)
+investmentRoute.post('/request-withdrawal', imageUpload.single('receipt'), investmentController.requestwithdraw)
 investmentRoute.get('/withdrawal/:userId', investmentController.getWithdrawalData)
 investmentRoute.patch('/confirm-withdrawal', investmentController.confirmWithdrawal)
 

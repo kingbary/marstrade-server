@@ -41,10 +41,12 @@ investmentSchema.virtual("ROI").get(function () {
   let daysPassed = Math.round(timems / (1000 * 60 * 60 * 24));
   daysPassed = daysPassed > 7 ? 7 : daysPassed;
   const interest =
-    this.investmentAmount *
-    daysPassed *
-    packageConverter[this.investmentPackage] *
-    0.01;
+    this.status === STATUS.COMPLETED
+      ? 0
+      : this.investmentAmount *
+        daysPassed *
+        packageConverter[this.investmentPackage] *
+        0.01;
   return interest;
 });
 

@@ -15,6 +15,7 @@ export type TransDetails = {
     method: string;
     amount: number;
     walletAddress: string;
+    receipt: string;
 }
 
 
@@ -95,13 +96,16 @@ export interface IMailData {
     ROI: string,
 }
 
-export interface IInvestmentReq {
+export interface ITransactionReq {
     investor: ID;
-    investmentPlan: PLANS;
-    investmentPackage: string;
-    investmentAmount: number;
     method: string;
     receipt: string;
+    investmentAmount: number;
+}
+
+export interface IInvestmentReq extends ITransactionReq {
+    investmentPlan: PLANS;
+    investmentPackage: string;
 }
 
 export interface IInvestment {

@@ -37,10 +37,12 @@ investmentSchema.virtual("ROI").get(function () {
         : 0;
     let daysPassed = Math.round(timems / (1000 * 60 * 60 * 24));
     daysPassed = daysPassed > 7 ? 7 : daysPassed;
-    const interest = this.investmentAmount *
-        daysPassed *
-        exports.packageConverter[this.investmentPackage] *
-        0.01;
+    const interest = this.status === types_1.STATUS.COMPLETED
+        ? 0
+        : this.investmentAmount *
+            daysPassed *
+            exports.packageConverter[this.investmentPackage] *
+            0.01;
     return interest;
 });
 const Investment = (0, mongoose_1.model)("Investment", investmentSchema);

@@ -1,145 +1,251 @@
-import e from "express"
-import asyncHandler from "express-async-handler"
-import { ID, IInvestmentReq, ITransaction, PLANS } from "../models/types"
+import e, { Response } from "express";
+import asyncHandler from "express-async-handler";
+import { ID, IInvestmentReq, ITransaction, PLANS } from "../models/types";
 import { ICloudinary } from "../services/cloudinary.service";
-import { IMongoService } from "../services/db.service"
+import { IMongoService } from "../services/db.service";
 import { IMailService } from "../services/mail.service";
 
 export interface IInvestmentController {
-    confirmWithdrawal: e.RequestHandler;
-    getTransactionHistory: e.RequestHandler;
-    getWithdrawalData: e.RequestHandler;
-    makeInvestment: e.RequestHandler;
-    redeemReferral: e.RequestHandler;
-    requestwithdraw: e.RequestHandler;
-    terminateInvestment: e.RequestHandler;
-    verifyDeposit: e.RequestHandler;
+  confirmWithdrawal: e.RequestHandler;
+  getTransactionHistory: e.RequestHandler;
+  getWithdrawalData: e.RequestHandler;
+  // gasPayment: e.RequestHandler;
+  makeInvestment: e.RequestHandler;
+  redeemReferral: e.RequestHandler;
+  requestwithdraw: e.RequestHandler;
+  terminateInvestment: e.RequestHandler;
+  verifyDeposit: e.RequestHandler;
 }
 
 export class InvestmentController implements IInvestmentController {
-    private readonly persistence
-    private readonly objService
-    private readonly mailService
+  private readonly persistence;
+  private readonly objService;
+  private readonly mailService;
 
-    constructor(persistence: IMongoService, objService: ICloudinary, mailService: IMailService) {
-        this.persistence = persistence
-        this.objService = objService
-        this.mailService = mailService
+  constructor(
+    persistence: IMongoService,
+    objService: ICloudinary,
+    mailService: IMailService
+  ) {
+    this.persistence = persistence;
+    this.objService = objService;
+    this.mailService = mailService;
+  }
+
+  confirmWithdrawal = asyncHandler(async (req, res) => {
+    const { transId, gasId } = req.body;
+    
+    const { statusCode: gasStCode, message: gasMsg } =
+      await this.persistence.confirmTransaction(gasId);
+
+    if (gasStCode !== 200) {
+      res.status(gasStCode).json({ message: gasMsg });
+      return;
     }
 
-    confirmWithdrawal = asyncHandler(async (req, res) => {
-        const { transId } = req.body
-        const { statusCode, message } = await this.persistence.confirmWithdrawal(transId)
-        res.status(statusCode).json({ message })
-    })
+    const { statusCode, message } = await this.persistence.confirmWithdrawal(
+      transId
+    );
+    res.status(statusCode).json({ message });
+  });
 
-    getTransactionHistory = asyncHandler(async (req, res) => {
-        const { userId } = req.params
-        const transactions = await this.persistence.getTransactionHistory(userId)
-        res.json(transactions)
-    })
+  getTransactionHistory = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const transactions = await this.persistence.getTransactionHistory(userId);
+    res.json(transactions);
+  });
 
-    getWithdrawalData = asyncHandler(async (req, res) => {
-        const { userId } = req.params
-        const transaction = await this.persistence.getWithdrawalData(userId)
-        res.json(transaction)
-    })
+  getWithdrawalData = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const transaction = await this.persistence.getWithdrawalData(userId);
+    res.json(transaction);
+  });
 
-    makeInvestment = asyncHandler(async (req, res) => {
-        const { userId, amount, invPackage, plan, method } = req.body
-        const receiptPath = req.file?.path
+  makeInvestment = asyncHandler(async (req, res) => {
+    const { userId, amount, invPackage, plan, method } = req.body;
+    const fromAdmin: boolean | undefined = req.body.fromAdmin;
+    const receiptPath = req.file?.path;
 
-        if (!receiptPath) {
-            res.status(400).json({ message: "Incomplete details." })
-            return
-        }
+    if (!receiptPath && !fromAdmin) {
+      res.status(400).json({ message: "Incomplete details." });
+      return;
+    }
 
-        const investmentDetails: IInvestmentReq = {
-            investor: <ID>userId,
-            investmentAmount: +amount,
-            investmentPackage: invPackage,
-            method: method,
-            investmentPlan: <PLANS>plan,
-            receipt: 'pending'
-        }
-        const [investment, transaction] = await this.persistence.createInvestment(investmentDetails)
+    const investmentDetails: IInvestmentReq = {
+      investor: <ID>userId,
+      investmentAmount: +amount,
+      investmentPackage: invPackage,
+      method: method,
+      investmentPlan: <PLANS>plan,
+      receipt: "pending",
+    };
+    const [investment, transaction] = await this.persistence.createInvestment(
+      investmentDetails
+    );
 
-        const {
-            isSuccess,
-            imageURL } = await this.objService.uploadImage(receiptPath, transaction.id!, 'receipts')
+    if (!fromAdmin && receiptPath) {
+      const { isSuccess, imageURL } = await this.objService.uploadImage(
+        receiptPath,
+        transaction.id!,
+        "receipts"
+      );
 
-        if (!isSuccess || !imageURL) {
-            res.status(400).json({ message: "Could not uplaod receipt. Try again later." })
-            return
-        }
-        const { statusCode, message } = await this.persistence.addReceipttoInv(transaction.id!, imageURL)
+      if (!isSuccess || !imageURL) {
+        res
+          .status(500)
+          .json({ message: "Could not uplaod receipt. Try again later." });
+        return;
+      }
 
-        if (statusCode === 200) {
-            const adminMail = await this.persistence.getAdminMail()
-            await this.mailService.sendDepositNotifyMail({
-                email: adminMail,
-                firstName: 'Admin',
-                amount: `${investmentDetails.investmentAmount}`,
-                method: method,
-                invPlan: investmentDetails.investmentPlan,
-                invPackage: investmentDetails.investmentPackage,
-                ROI: `${investment.ROI}`,
-            })
-        }
+      const { statusCode, message } = await this.persistence.addReceipttoInv(
+        transaction.id!,
+        imageURL
+      );
 
-        res.status(statusCode).json({ message })
-    })
+      if (statusCode !== 200) {
+        res.status(statusCode).json({ message });
+        return;
+      }
+    }
 
-    redeemReferral = asyncHandler(async (req, res) => {
-        const userId: ID = req.body.userId
-        const { statusCode, message } = await this.persistence.redeemReferral(userId)
+    const adminMail = await this.persistence.getAdminMail();
+    await this.mailService.sendDepositNotifyMail({
+      email: adminMail,
+      firstName: "Admin",
+      amount: `${investmentDetails.investmentAmount}`,
+      method: method,
+      invPlan: investmentDetails.investmentPlan,
+      invPackage: investmentDetails.investmentPackage,
+      ROI: `${investment.ROI}`,
+    });
 
-        res.status(statusCode).json({ message })
-    })
+    res.json({ message: "Deposit made" });
+  });
 
-    requestwithdraw = asyncHandler(async (req, res) => {
-        const userId = req.body.userId
-        const method = req.body.method
-        const amount = req.body.amount
-        const address = req.body.address
+  gasPayment = async (
+    res: Response,
+    userId: ID,
+    amount: number,
+    method: string,
+    receiptPath: string
+  ) => {
+    const transaction = await this.persistence.createTransaction({
+      investor: userId,
+      investmentAmount: amount,
+      method,
+      receipt: "pending",
+    });
 
-        const transDetails = {
-            investor: <ID>userId,
-            method: <string>method,
-            amount: +amount,
-            walletAddress: <string>address,
-        }
-        const { statusCode, message } = await this.persistence.requestwithdraw(transDetails)
+    const { isSuccess, imageURL } = await this.objService.uploadImage(
+      receiptPath,
+      transaction.id!,
+      "receipts"
+    );
 
-        res.status(statusCode).json({ message })
-    })
+    if (!isSuccess || !imageURL) {
+      res
+        .status(500)
+        .json({ message: "Could not uplaod receipt. Try again later." });
+      return;
+    }
 
-    terminateInvestment = asyncHandler(async (req, res) => {
-        const invId: ID = req.body.invId
-        const { statusCode, message } = await this.persistence.terminateInvestment(invId)
+    const { statusCode, message } = await this.persistence.addReceipttoInv(
+      transaction.id!,
+      imageURL
+    );
 
-        res.status(statusCode).json({ message })
-    })
+    if (statusCode !== 200) {
+      res.status(statusCode).json({ message });
+      return;
+    }
 
-    verifyDeposit = asyncHandler(async (req, res) => {
-        const invId: ID = req.body.invId
-        const response = await this.persistence.verifyDeposit(invId)
+    const adminMail = await this.persistence.getAdminMail();
+    await this.mailService.sendDepositNotifyMail({
+      email: adminMail,
+      firstName: "Admin",
+      amount: `${amount}`,
+      method,
+      invPlan: "N/A",
+      invPackage: "N/A",
+      ROI: "N/A",
+    });
 
-        if ('email' in response) {
-            const trans = <ITransaction>response.inv.transaction
-            await this.mailService.sendDepositConfirmMail({
-                email: response.email,
-                firstName: response.firstName,
-                amount: `${response.inv.investmentAmount}`,
-                invPackage: response.inv.investmentPackage,
-                invPlan: response.inv.investmentPlan,
-                method: trans.method,
-                ROI: `${response.inv.ROI}`,
-            })
-            res.json({ message: 'Deposit verified' })
-            return
-        }
+    return imageURL;
+  };
 
-        res.status(response.statusCode).json({ message: response.message })
-    })
+  redeemReferral = asyncHandler(async (req, res) => {
+    const userId: ID = req.body.userId;
+    const { statusCode, message } = await this.persistence.redeemReferral(
+      userId
+    );
+
+    res.status(statusCode).json({ message });
+  });
+
+  requestwithdraw = asyncHandler(async (req, res) => {
+    const userId = req.body.userId;
+    const method = req.body.method;
+    const amount = req.body.amount;
+    const address = req.body.address;
+
+    const { gasAmount, gasMethod } = req.body;
+    const receiptPath = req.file?.path;
+
+    if (!receiptPath) {
+      res.status(400).json({ message: "Incomplete details." });
+      return;
+    }
+
+    const imageURL = (await this.gasPayment(
+      res,
+      userId,
+      +gasAmount,
+      gasMethod,
+      receiptPath
+    )) as string;
+
+    const transDetails = {
+      investor: <ID>userId,
+      method: <string>method,
+      amount: +amount,
+      walletAddress: <string>address,
+      receipt: imageURL,
+    };
+    const { statusCode, message } = await this.persistence.requestwithdraw(
+      transDetails
+    );
+
+    res.status(statusCode).json({ message });
+  });
+
+  terminateInvestment = asyncHandler(async (req, res) => {
+    const invId: ID = req.body.invId;
+    const { statusCode, message } = await this.persistence.terminateInvestment(
+      invId
+    );
+
+    res.status(statusCode).json({ message });
+  });
+
+  verifyDeposit = asyncHandler(async (req, res) => {
+    const invId: ID = req.body.invId;
+    const response = await this.persistence.verifyDeposit(invId);
+
+    if ("email" in response) {
+      const trans = <ITransaction>response.inv.transaction;
+      await this.mailService.sendDepositConfirmMail({
+        email: response.email,
+        firstName: response.firstName,
+        amount: `${response.inv.investmentAmount}`,
+        invPackage: response.inv.investmentPackage,
+        invPlan: response.inv.investmentPlan,
+        method: trans.method,
+        ROI: `${response.inv.ROI}`,
+      });
+      res.json({ message: "Deposit verified" });
+      return;
+    }
+
+    res.status(response.statusCode).json({ message: response.message });
+  });
 }
