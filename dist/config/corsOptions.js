@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5000',
-    `https://bitsolutionfx-wbpdf.ondigitalocean.app`,
     `https://dashboard.marstrade.org`,
     `https://www.${process.env.BASE_URL}`,
     `https://${process.env.BASE_URL}`, // production URL

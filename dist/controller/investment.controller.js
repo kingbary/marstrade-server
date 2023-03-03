@@ -39,7 +39,7 @@ class InvestmentController {
         this.makeInvestment = (0, express_async_handler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
             var _a;
             const { userId, amount, invPackage, plan, method } = req.body;
-            const fromAdmin = req.body.fromAdmin;
+            const fromAdmin = req.body.fromAdmin && JSON.parse(req.body.fromAdmin);
             const receiptPath = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
             if (!receiptPath && !fromAdmin) {
                 res.status(400).json({ message: "Incomplete details." });
