@@ -71,7 +71,7 @@ export class Auth implements IAuth {
         const origin = <string>req.get('origin')
         const newUser = await this.persistence.createUser(userData, origin)
 
-        const mailResponse = await this.mailService.sendWelcomeMail(newUser)
+        // const mailResponse = await this.mailService.sendWelcomeMail(newUser)
         // if (!mailResponse.isSuccess) {
         //     const deleteResponse = await this.persistence.deleteUser(newUser.id!)
         //     res.status(mailResponse.statusCode).json({ message: mailResponse.message })
@@ -240,7 +240,7 @@ export class Auth implements IAuth {
         const origin = req.get('origin')
         const resetURL = `${origin}/reset-password/${resetPassToken}`
 
-        const sendStatus = await this.mailService.sendPasswordResetMail(user.email, resetURL)
+        // const sendStatus = await this.mailService.sendPasswordResetMail(user.email, resetURL)
 
         res.json({ message: 'Mail sent successfully' })
     })

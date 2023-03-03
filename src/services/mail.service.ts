@@ -6,9 +6,9 @@ import { depositConfirmedTemplate, depositNotifyTemplate } from './mailTemplates
 export interface IMailService {
     sendMail: (to: string, subject: string, html: string) => Promise<SMTPTransport.SentMessageInfo>;
     sendWelcomeMail: (user: IUser) => Promise<IServiceResponse>;
-    sendPasswordResetMail: (email: string, url: string) => Promise<SMTPTransport.SentMessageInfo>;
-    sendDepositConfirmMail: (payload: IMailData) => Promise<SMTPTransport.SentMessageInfo>;
-    sendDepositNotifyMail: (payload: IMailData) => Promise<SMTPTransport.SentMessageInfo>;
+    sendPasswordResetMail: (email: string, url: string) => Promise<IServiceResponse>;
+    sendDepositConfirmMail: (payload: IMailData) => Promise<IServiceResponse>;
+    sendDepositNotifyMail: (payload: IMailData) => Promise<IServiceResponse>;
 }
 
 class MailService implements IMailService {
@@ -102,9 +102,18 @@ class MailService implements IMailService {
 
         try {
             const sendMail = await this.sendMail(to, "RESET PASSWORD", passwordResetMail)
-            return sendMail
+            process.env.NODE_ENV === 'development' && console.log(sendMail)
+            return {
+                isSuccess: true,
+                message: "Mail sent succesfully",
+                statusCode: 200,
+            }
         } catch (error) {
-            throw new Error("Mail not sent")
+            return {
+                isSuccess: false,
+                message: "Email verification failed",
+                statusCode: 500,
+            }
         }
     }
 
@@ -119,9 +128,18 @@ class MailService implements IMailService {
                 .replace(/<<PACKAGE>>/gi, payload.invPackage)
                 .replace(/<<ROI>>/gi, payload.ROI)
             const sendMail = await this.sendMail(to, "DEPOSIT CONFIRMATION", depositConfirmMail)
-            return sendMail
+            process.env.NODE_ENV === 'development' && console.log(sendMail)
+            return {
+                isSuccess: true,
+                message: "Mail sent succesfully",
+                statusCode: 200,
+            }
         } catch (error) {
-            throw new Error("Mail not sent")
+            return {
+                isSuccess: false,
+                message: "Email verification failed",
+                statusCode: 500,
+            }
         }
     }
 
@@ -136,9 +154,18 @@ class MailService implements IMailService {
                 .replace(/<<PACKAGE>>/gi, payload.invPackage)
                 .replace(/<<ROI>>/gi, payload.ROI)
             const sendMail = await this.sendMail(to, "NOTIFICATION OF DEPOSIT", depositNotifyMail)
-            return sendMail
+            process.env.NODE_ENV === 'development' && console.log(sendMail)
+            return {
+                isSuccess: true,
+                message: "Mail sent succesfully",
+                statusCode: 200,
+            }
         } catch (error) {
-            throw new Error("Mail not sent")
+            return {
+                isSuccess: false,
+                message: "Email verification failed",
+                statusCode: 500,
+            }
         }
     }
 }

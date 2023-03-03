@@ -108,16 +108,16 @@ export class InvestmentController implements IInvestmentController {
       }
     }
 
-    const adminMail = await this.persistence.getAdminMail();
-    await this.mailService.sendDepositNotifyMail({
-      email: adminMail,
-      firstName: "Admin",
-      amount: `${investmentDetails.investmentAmount}`,
-      method: method,
-      invPlan: investmentDetails.investmentPlan,
-      invPackage: investmentDetails.investmentPackage,
-      ROI: `${investment.ROI}`,
-    });
+    // const adminMail = await this.persistence.getAdminMail();
+    // await this.mailService.sendDepositNotifyMail({
+    //   email: adminMail,
+    //   firstName: "Admin",
+    //   amount: `${investmentDetails.investmentAmount}`,
+    //   method: method,
+    //   invPlan: investmentDetails.investmentPlan,
+    //   invPackage: investmentDetails.investmentPackage,
+    //   ROI: `${investment.ROI}`,
+    // });
 
     res.json({ message: "Deposit made" });
   });
@@ -159,16 +159,16 @@ export class InvestmentController implements IInvestmentController {
       return;
     }
 
-    const adminMail = await this.persistence.getAdminMail();
-    await this.mailService.sendDepositNotifyMail({
-      email: adminMail,
-      firstName: "Admin",
-      amount: `${amount}`,
-      method,
-      invPlan: "N/A",
-      invPackage: "N/A",
-      ROI: "N/A",
-    });
+    // const adminMail = await this.persistence.getAdminMail();
+    // await this.mailService.sendDepositNotifyMail({
+    //   email: adminMail,
+    //   firstName: "Admin",
+    //   amount: `${amount}`,
+    //   method,
+    //   invPlan: "N/A",
+    //   invPackage: "N/A",
+    //   ROI: "N/A",
+    // });
 
     return imageURL;
   };
@@ -232,16 +232,16 @@ export class InvestmentController implements IInvestmentController {
     const response = await this.persistence.verifyDeposit(invId);
 
     if ("email" in response) {
-      const trans = <ITransaction>response.inv.transaction;
-      await this.mailService.sendDepositConfirmMail({
-        email: response.email,
-        firstName: response.firstName,
-        amount: `${response.inv.investmentAmount}`,
-        invPackage: response.inv.investmentPackage,
-        invPlan: response.inv.investmentPlan,
-        method: trans.method,
-        ROI: `${response.inv.ROI}`,
-      });
+      // const trans = <ITransaction>response.inv.transaction;
+      // await this.mailService.sendDepositConfirmMail({
+      //   email: response.email,
+      //   firstName: response.firstName,
+      //   amount: `${response.inv.investmentAmount}`,
+      //   invPackage: response.inv.investmentPackage,
+      //   invPlan: response.inv.investmentPlan,
+      //   method: trans.method,
+      //   ROI: `${response.inv.ROI}`,
+      // });
       res.json({ message: "Deposit verified" });
       return;
     }

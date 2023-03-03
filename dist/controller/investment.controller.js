@@ -68,16 +68,16 @@ class InvestmentController {
                     return;
                 }
             }
-            const adminMail = yield this.persistence.getAdminMail();
-            yield this.mailService.sendDepositNotifyMail({
-                email: adminMail,
-                firstName: "Admin",
-                amount: `${investmentDetails.investmentAmount}`,
-                method: method,
-                invPlan: investmentDetails.investmentPlan,
-                invPackage: investmentDetails.investmentPackage,
-                ROI: `${investment.ROI}`,
-            });
+            // const adminMail = await this.persistence.getAdminMail();
+            // await this.mailService.sendDepositNotifyMail({
+            //   email: adminMail,
+            //   firstName: "Admin",
+            //   amount: `${investmentDetails.investmentAmount}`,
+            //   method: method,
+            //   invPlan: investmentDetails.investmentPlan,
+            //   invPackage: investmentDetails.investmentPackage,
+            //   ROI: `${investment.ROI}`,
+            // });
             res.json({ message: "Deposit made" });
         }));
         this.gasPayment = (res, userId, amount, method, receiptPath) => __awaiter(this, void 0, void 0, function* () {
@@ -99,16 +99,16 @@ class InvestmentController {
                 res.status(statusCode).json({ message });
                 return;
             }
-            const adminMail = yield this.persistence.getAdminMail();
-            yield this.mailService.sendDepositNotifyMail({
-                email: adminMail,
-                firstName: "Admin",
-                amount: `${amount}`,
-                method,
-                invPlan: "N/A",
-                invPackage: "N/A",
-                ROI: "N/A",
-            });
+            // const adminMail = await this.persistence.getAdminMail();
+            // await this.mailService.sendDepositNotifyMail({
+            //   email: adminMail,
+            //   firstName: "Admin",
+            //   amount: `${amount}`,
+            //   method,
+            //   invPlan: "N/A",
+            //   invPackage: "N/A",
+            //   ROI: "N/A",
+            // });
             return imageURL;
         });
         this.redeemReferral = (0, express_async_handler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -148,16 +148,16 @@ class InvestmentController {
             const invId = req.body.invId;
             const response = yield this.persistence.verifyDeposit(invId);
             if ("email" in response) {
-                const trans = response.inv.transaction;
-                yield this.mailService.sendDepositConfirmMail({
-                    email: response.email,
-                    firstName: response.firstName,
-                    amount: `${response.inv.investmentAmount}`,
-                    invPackage: response.inv.investmentPackage,
-                    invPlan: response.inv.investmentPlan,
-                    method: trans.method,
-                    ROI: `${response.inv.ROI}`,
-                });
+                // const trans = <ITransaction>response.inv.transaction;
+                // await this.mailService.sendDepositConfirmMail({
+                //   email: response.email,
+                //   firstName: response.firstName,
+                //   amount: `${response.inv.investmentAmount}`,
+                //   invPackage: response.inv.investmentPackage,
+                //   invPlan: response.inv.investmentPlan,
+                //   method: trans.method,
+                //   ROI: `${response.inv.ROI}`,
+                // });
                 res.json({ message: "Deposit verified" });
                 return;
             }

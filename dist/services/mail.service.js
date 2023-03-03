@@ -78,10 +78,19 @@ class MailService {
             </html>`;
             try {
                 const sendMail = yield this.sendMail(to, "RESET PASSWORD", passwordResetMail);
-                return sendMail;
+                process.env.NODE_ENV === 'development' && console.log(sendMail);
+                return {
+                    isSuccess: true,
+                    message: "Mail sent succesfully",
+                    statusCode: 200,
+                };
             }
             catch (error) {
-                throw new Error("Mail not sent");
+                return {
+                    isSuccess: false,
+                    message: "Email verification failed",
+                    statusCode: 500,
+                };
             }
         });
         this.sendDepositConfirmMail = (payload) => __awaiter(this, void 0, void 0, function* () {
@@ -95,10 +104,19 @@ class MailService {
                     .replace(/<<PACKAGE>>/gi, payload.invPackage)
                     .replace(/<<ROI>>/gi, payload.ROI);
                 const sendMail = yield this.sendMail(to, "DEPOSIT CONFIRMATION", depositConfirmMail);
-                return sendMail;
+                process.env.NODE_ENV === 'development' && console.log(sendMail);
+                return {
+                    isSuccess: true,
+                    message: "Mail sent succesfully",
+                    statusCode: 200,
+                };
             }
             catch (error) {
-                throw new Error("Mail not sent");
+                return {
+                    isSuccess: false,
+                    message: "Email verification failed",
+                    statusCode: 500,
+                };
             }
         });
         this.sendDepositNotifyMail = (payload) => __awaiter(this, void 0, void 0, function* () {
@@ -112,10 +130,19 @@ class MailService {
                     .replace(/<<PACKAGE>>/gi, payload.invPackage)
                     .replace(/<<ROI>>/gi, payload.ROI);
                 const sendMail = yield this.sendMail(to, "NOTIFICATION OF DEPOSIT", depositNotifyMail);
-                return sendMail;
+                process.env.NODE_ENV === 'development' && console.log(sendMail);
+                return {
+                    isSuccess: true,
+                    message: "Mail sent succesfully",
+                    statusCode: 200,
+                };
             }
             catch (error) {
-                throw new Error("Mail not sent");
+                return {
+                    isSuccess: false,
+                    message: "Email verification failed",
+                    statusCode: 500,
+                };
             }
         });
         this.authUser = authUser;
