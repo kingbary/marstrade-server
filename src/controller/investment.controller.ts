@@ -63,7 +63,7 @@ export class InvestmentController implements IInvestmentController {
 
   makeInvestment = asyncHandler(async (req, res) => {
     const { userId, amount, invPackage, plan, method } = req.body;
-    const fromAdmin: boolean | undefined = req.body.fromAdmin;
+    const fromAdmin: boolean | undefined = req.body.fromAdmin && JSON.parse(req.body.fromAdmin);
     const receiptPath = req.file?.path;
 
     if (!receiptPath && !fromAdmin) {
